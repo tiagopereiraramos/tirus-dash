@@ -182,7 +182,7 @@ export default function Aprovacoes() {
                 <SelectValue placeholder="Status de Aprovação" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="todos">Todos</SelectItem>
                 <SelectItem value="pendente">Pendente</SelectItem>
                 <SelectItem value="aprovada">Aprovada</SelectItem>
                 <SelectItem value="rejeitada">Rejeitada</SelectItem>

@@ -88,7 +88,7 @@ export default function Execucoes() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os Status</SelectItem>
+                <SelectItem value="todos">Todos os Status</SelectItem>
                 <SelectItem value="pendente">Pendente</SelectItem>
                 <SelectItem value="executando">Executando</SelectItem>
                 <SelectItem value="concluido">Concluído</SelectItem>
