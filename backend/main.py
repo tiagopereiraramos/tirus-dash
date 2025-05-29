@@ -59,7 +59,7 @@ class PerfilUsuario(str, Enum):
 class Operadora(Base):
     __tablename__ = "operadoras"
     
-    id = Column(SQLUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     nome = Column(String(100), unique=True, nullable=False)
     codigo = Column(String(20), unique=True, nullable=False)
     possui_rpa = Column(Boolean, default=False)
@@ -76,12 +76,12 @@ class Operadora(Base):
 class Cliente(Base):
     __tablename__ = "clientes"
     
-    id = Column(SQLUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     hash_unico = Column(String(50), unique=True, nullable=False)
     razao_social = Column(String(255), nullable=False)
     nome_sat = Column(String(255), nullable=False)
     cnpj = Column(String(20), nullable=False)
-    operadora_id = Column(SQLUUID(as_uuid=True), ForeignKey("operadoras.id"))
+    operadora_id = Column(String(36), ForeignKey("operadoras.id"))
     filtro = Column(String(255))
     servico = Column(String(255))
     dados_sat = Column(Text)
@@ -100,15 +100,15 @@ class Cliente(Base):
 class Processo(Base):
     __tablename__ = "processos"
     
-    id = Column(SQLUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    cliente_id = Column(SQLUUID(as_uuid=True), ForeignKey("clientes.id"))
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    cliente_id = Column(String(36), ForeignKey("clientes.id"))
     mes_ano = Column(String(7), nullable=False)
     status_processo = Column(String(50), default=StatusProcesso.AGUARDANDO_DOWNLOAD.value)
     url_fatura = Column(String(500))
     caminho_s3_fatura = Column(String(500))
     data_vencimento = Column(Date)
     valor_fatura = Column(DECIMAL(15,2))
-    aprovado_por_usuario_id = Column(SQLUUID(as_uuid=True), ForeignKey("usuarios.id"))
+    aprovado_por_usuario_id = Column(String(36), ForeignKey("usuarios.id"))
     data_aprovacao = Column(DateTime)
     enviado_para_sat = Column(Boolean, default=False)
     data_envio_sat = Column(DateTime)
@@ -124,8 +124,8 @@ class Processo(Base):
 class Execucao(Base):
     __tablename__ = "execucoes"
     
-    id = Column(SQLUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    processo_id = Column(SQLUUID(as_uuid=True), ForeignKey("processos.id"))
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    processo_id = Column(String(36), ForeignKey("processos.id"))
     tipo_execucao = Column(String(50), nullable=False)
     status_execucao = Column(String(50), nullable=False)
     classe_rpa_utilizada = Column(String(100))
@@ -137,7 +137,7 @@ class Execucao(Base):
     url_arquivo_s3 = Column(String(500))
     numero_tentativa = Column(Integer, default=1)
     detalhes_erro = Column(JSON)
-    executado_por_usuario_id = Column(SQLUUID(as_uuid=True), ForeignKey("usuarios.id"))
+    executado_por_usuario_id = Column(String(36), ForeignKey("usuarios.id"))
     ip_origem = Column(String(45))
     user_agent = Column(Text)
     
@@ -146,7 +146,7 @@ class Execucao(Base):
 class Usuario(Base):
     __tablename__ = "usuarios"
     
-    id = Column(SQLUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     nome_completo = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, nullable=False)
     telefone = Column(String(20))
@@ -167,7 +167,7 @@ class OperadoraCreate(OperadoraBase):
     pass
 
 class OperadoraResponse(OperadoraBase):
-    id: uuid.UUID
+    id: str
     data_criacao: datetime
     
     class Config:
@@ -177,7 +177,7 @@ class ClienteBase(BaseModel):
     razao_social: str
     nome_sat: str
     cnpj: str
-    operadora_id: uuid.UUID
+    operadora_id: str
     filtro: Optional[str] = None
     servico: Optional[str] = None
     dados_sat: Optional[str] = None
@@ -192,7 +192,7 @@ class ClienteCreate(ClienteBase):
     pass
 
 class ClienteResponse(ClienteBase):
-    id: uuid.UUID
+    id: str
     hash_unico: str
     data_criacao: datetime
     operadora: OperadoraResponse
@@ -201,8 +201,8 @@ class ClienteResponse(ClienteBase):
         from_attributes = True
 
 class ProcessoResponse(BaseModel):
-    id: uuid.UUID
-    cliente_id: uuid.UUID
+    id: str
+    cliente_id: str
     mes_ano: str
     status_processo: StatusProcesso
     data_criacao: datetime
