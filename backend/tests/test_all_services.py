@@ -4,7 +4,6 @@ Sistema RPA BGTELECOM
 Desenvolvido por: Tiago Pereira Ramos
 """
 
-import pytest
 import tempfile
 import os
 from datetime import datetime, timedelta
