@@ -649,5 +649,85 @@ async def listar_rpas_disponiveis():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/inicializar-dados")
+async def inicializar_dados_sistema(db: Session = Depends(get_db)):
+    """Inicializa sistema com dados reais da BGTELECOM"""
+    try:
+        from .services.dados_iniciais_service import dados_iniciais_service
+        
+        resultado = dados_iniciais_service.inicializar_sistema_completo(db)
+        return resultado
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/agendamentos/criar-processos-mensais")
+async def criar_processos_mensais_manual(mes_ano: Optional[str] = None):
+    """Cria processos mensais manualmente"""
+    try:
+        from .services.agendamento_service import agendamento_service
+        
+        resultado = agendamento_service.criar_processos_mensais_manual(mes_ano)
+        return resultado
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/agendamentos/executar-downloads")
+async def executar_downloads_automaticos():
+    """Executa downloads automáticos manualmente"""
+    try:
+        from .services.agendamento_service import agendamento_service
+        
+        resultado = agendamento_service.executar_downloads_automaticos_manual()
+        return resultado
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/agendamentos/verificar-pendencias")
+async def verificar_pendencias():
+    """Verifica pendências no sistema"""
+    try:
+        from .services.agendamento_service import agendamento_service
+        
+        resultado = agendamento_service.verificar_pendencias_manual()
+        return resultado
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/notificacoes/teste")
+async def testar_notificacoes(
+    tipo: str = "aprovacao_pendente",
+    db: Session = Depends(get_db)
+):
+    """Testa sistema de notificações"""
+    try:
+        from .services.notificacao_service import notificacao_service
+        
+        if tipo == "aprovacao_pendente":
+            await notificacao_service.enviar_notificacao_aprovacao_pendente(
+                processo_id="teste_123",
+                cliente_nome="Cliente Teste",
+                operadora_nome="EMBRATEL",
+                valor_fatura=1500.00
+            )
+        elif tipo == "fatura_aprovada":
+            await notificacao_service.enviar_notificacao_fatura_aprovada(
+                processo_id="teste_123",
+                cliente_nome="Cliente Teste",
+                aprovador_nome="Admin Teste"
+            )
+        
+        return {
+            "sucesso": True,
+            "tipo": tipo,
+            "mensagem": f"Notificação de teste {tipo} enviada"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
