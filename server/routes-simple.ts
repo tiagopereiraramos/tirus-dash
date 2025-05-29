@@ -221,35 +221,137 @@ except Exception as e:
     });
   });
 
-  // Execuções
-  app.get("/api/execucoes", (req, res) => {
-    const { status } = req.query;
-    let execucoes = DADOS_BGTELECOM.execucoes;
-    
-    if (status) {
-      execucoes = execucoes.filter(e => e.status_execucao === status);
+  // Execuções - dados reais BGTELECOM
+  app.get("/api/execucoes", async (req, res) => {
+    try {
+      const { status } = req.query;
+      const { spawn } = require('child_process');
+      const python = spawn('python', ['-c', `
+import sys
+sys.path.append('./backend')
+from database_postgresql import ExecucaoService
+import json
+try:
+    result = ExecucaoService.listar_execucoes_completas(0, 100, "${status || ''}")
+    print(json.dumps(result))
+except Exception as e:
+    print(json.dumps({"error": str(e)}))
+`], { cwd: process.cwd() });
+
+      let output = '';
+      python.stdout.on('data', (data) => {
+        output += data.toString();
+      });
+
+      python.on('close', (code) => {
+        try {
+          const result = JSON.parse(output.trim());
+          if (result.error) {
+            throw new Error(result.error);
+          }
+          res.json({
+            success: true,
+            data: result.execucoes || []
+          });
+        } catch (error) {
+          res.json({
+            success: true,
+            data: []
+          });
+        }
+      });
+    } catch (error) {
+      console.error("Erro execuções:", error);
+      res.status(500).json({ error: "Erro ao buscar execuções" });
     }
-    
-    res.json({
-      success: true,
-      data: execucoes
-    });
   });
 
-  // Operadoras
-  app.get("/api/operadoras", (req, res) => {
-    res.json({
-      success: true,
-      data: DADOS_BGTELECOM.operadoras
-    });
+  // Operadoras - dados reais BGTELECOM
+  app.get("/api/operadoras", async (req, res) => {
+    try {
+      const { spawn } = require('child_process');
+      const python = spawn('python', ['-c', `
+import sys
+sys.path.append('./backend')
+from database_postgresql import OperadoraService
+import json
+try:
+    result = OperadoraService.listar_operadoras(True, True)
+    print(json.dumps({"operadoras": result}))
+except Exception as e:
+    print(json.dumps({"error": str(e)}))
+`], { cwd: process.cwd() });
+
+      let output = '';
+      python.stdout.on('data', (data) => {
+        output += data.toString();
+      });
+
+      python.on('close', (code) => {
+        try {
+          const result = JSON.parse(output.trim());
+          if (result.error) {
+            throw new Error(result.error);
+          }
+          res.json({
+            success: true,
+            data: result.operadoras || []
+          });
+        } catch (error) {
+          res.json({
+            success: true,
+            data: []
+          });
+        }
+      });
+    } catch (error) {
+      console.error("Erro operadoras:", error);
+      res.status(500).json({ error: "Erro ao buscar operadoras" });
+    }
   });
 
-  // Clientes
-  app.get("/api/clientes", (req, res) => {
-    res.json({
-      success: true,
-      data: DADOS_BGTELECOM.clientes
-    });
+  // Clientes - dados reais BGTELECOM
+  app.get("/api/clientes", async (req, res) => {
+    try {
+      const { spawn } = require('child_process');
+      const python = spawn('python', ['-c', `
+import sys
+sys.path.append('./backend')
+from database_postgresql import ClienteService
+import json
+try:
+    result = ClienteService.listar_clientes(None, True, '')
+    print(json.dumps({"clientes": result}))
+except Exception as e:
+    print(json.dumps({"error": str(e)}))
+`], { cwd: process.cwd() });
+
+      let output = '';
+      python.stdout.on('data', (data) => {
+        output += data.toString();
+      });
+
+      python.on('close', (code) => {
+        try {
+          const result = JSON.parse(output.trim());
+          if (result.error) {
+            throw new Error(result.error);
+          }
+          res.json({
+            success: true,
+            data: result.clientes || []
+          });
+        } catch (error) {
+          res.json({
+            success: true,
+            data: []
+          });
+        }
+      });
+    } catch (error) {
+      console.error("Erro clientes:", error);
+      res.status(500).json({ error: "Erro ao buscar clientes" });
+    }
   });
 
   // Status dos RPAs
