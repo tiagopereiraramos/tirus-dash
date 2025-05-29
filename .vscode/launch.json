@@ -1,0 +1,188 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Backend Principal",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend_orquestrador.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "DEBUG": "true"
+            },
+            "args": [],
+            "justMyCode": false
+        },
+        {
+            "name": "Debug App Principal",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/app.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "DEBUG": "true"
+            },
+            "args": [],
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Teste Vivo RPA",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/tests/test_vivo_rpa.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "DEBUG": "true"
+            },
+            "args": [],
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Teste OI RPA",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/tests/test_oi_rpa.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "DEBUG": "true"
+            },
+            "args": [],
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Teste Embratel RPA",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/tests/test_embratel_rpa.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "DEBUG": "true"
+            },
+            "args": [],
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Teste SAT RPA",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/tests/test_sat_rpa.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "DEBUG": "true"
+            },
+            "args": [],
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Teste Azuton RPA",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/tests/test_azuton_rpa.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "DEBUG": "true"
+            },
+            "args": [],
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Teste DigitalNet RPA",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/tests/test_digitalnet_rpa.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "DEBUG": "true"
+            },
+            "args": [],
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Services - Orquestrador Celery",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/services/orquestrador_celery.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "DEBUG": "true"
+            },
+            "args": [],
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Services - Workflow Aprovação",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/services/workflow_aprovacao.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "DEBUG": "true"
+            },
+            "args": [],
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Services - Notificação",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/services/notificacao_service.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "DEBUG": "true"
+            },
+            "args": [],
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Dados Iniciais",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/services/dados_iniciais_service.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "DEBUG": "true"
+            },
+            "args": [],
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Servidor Backend",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_backend.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "DEBUG": "true",
+                "FLASK_ENV": "development"
+            },
+            "args": [],
+            "justMyCode": false
+        }
+    ]
+}
