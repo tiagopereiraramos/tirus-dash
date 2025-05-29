@@ -12,11 +12,25 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // Conectar ao backend FastAPI na porta 8000
+  const baseUrl = 'http://localhost:8000';
+  const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+  
+  const headers: Record<string, string> = {};
+  if (data) {
+    headers["Content-Type"] = "application/json";
+  }
+  
+  // Adicionar token de autenticação se disponível
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(fullUrl, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
   });
 
   await throwIfResNotOk(res);
@@ -29,8 +43,21 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
-      credentials: "include",
+    // Conectar ao backend FastAPI na porta 8000
+    const baseUrl = 'http://localhost:8000';
+    const url = queryKey[0] as string;
+    const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+    
+    const headers: Record<string, string> = {};
+    
+    // Adicionar token de autenticação se disponível
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(fullUrl, {
+      headers,
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
