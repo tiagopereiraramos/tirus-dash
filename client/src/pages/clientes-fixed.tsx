@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Users, Building2, MapPin } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Clientes() {
   const { data: clientes, isLoading } = useQuery({
@@ -28,9 +29,17 @@ export default function Clientes() {
 
   return (
     <div className="space-y-8 p-8">
-      <div>
-        <h1 className="text-3xl font-bold">Clientes</h1>
-        <p className="text-muted-foreground">Gestão dos clientes BGTELECOM</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Clientes</h1>
+          <p className="text-muted-foreground">Gestão dos clientes BGTELECOM</p>
+        </div>
+        <Link href="/adicionar-cliente">
+          <Button className="flex items-center space-x-2">
+            <Users className="h-4 w-4" />
+            <span>Adicionar Cliente</span>
+          </Button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -10,6 +10,8 @@ import Execucoes from "@/pages/execucoes-fixed";
 import Aprovacoes from "@/pages/aprovacoes";
 import Operadoras from "@/pages/operadoras-fixed";
 import Clientes from "@/pages/clientes-fixed";
+import AdicionarCliente from "@/pages/adicionar-cliente";
+import UploadAvulso from "@/pages/upload-avulso";
 import Faturas from "@/pages/faturas";
 import Notificacoes from "@/pages/notificacoes";
 import Configuracoes from "@/pages/configuracoes";
@@ -27,6 +29,8 @@ function Router() {
       <Route path="/aprovacoes" component={Aprovacoes} />
       <Route path="/operadoras" component={Operadoras} />
       <Route path="/clientes" component={Clientes} />
+      <Route path="/adicionar-cliente" component={AdicionarCliente} />
+      <Route path="/upload-avulso" component={UploadAvulso} />
       <Route path="/faturas" component={Faturas} />
       <Route path="/notificacoes" component={Notificacoes} />
       <Route path="/configuracoes" component={Configuracoes} />
