@@ -12,8 +12,8 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Conectar ao backend FastAPI na porta 8000
-  const baseUrl = 'http://localhost:8000';
+  // Conectar ao backend Express na porta 5000
+  const baseUrl = 'http://localhost:5000';
   const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
   
   const headers: Record<string, string> = {};
@@ -43,8 +43,8 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // Conectar ao backend FastAPI na porta 8000
-    const baseUrl = 'http://localhost:8000';
+    // Conectar ao backend Express na porta 5000
+    const baseUrl = 'http://localhost:5000';
     const url = queryKey[0] as string;
     const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
     
