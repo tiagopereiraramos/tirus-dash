@@ -90,15 +90,47 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getExecucoes(params: { page?: number; limit?: number; status?: string }): Promise<any> {
-    const { page = 1, limit = 20 } = params;
+    const { page = 1, limit = 20, status } = params;
     try {
-      const data = await db.select().from(execucoes).orderBy(desc(execucoes.iniciadoEm)).limit(limit);
+      let query = db.select({
+        id: execucoes.id,
+        tipo: execucoes.tipo,
+        status: execucoes.status,
+        erro: execucoes.erro,
+        tempoExecucao: execucoes.tempoExecucao,
+        iniciadoEm: execucoes.iniciadoEm,
+        finalizadoEm: execucoes.finalizadoEm,
+        contrato: {
+          id: contratos.id,
+          servico: contratos.servico,
+          cliente: {
+            id: clientes.id,
+            nomeSat: clientes.nomeSat
+          },
+          operadora: {
+            id: operadoras.id,
+            nome: operadoras.nome
+          }
+        }
+      })
+      .from(execucoes)
+      .leftJoin(contratos, eq(execucoes.contratoId, contratos.id))
+      .leftJoin(clientes, eq(contratos.clienteId, clientes.id))
+      .leftJoin(operadoras, eq(contratos.operadoraId, operadoras.id));
+
+      if (status && status !== 'todos') {
+        query = query.where(eq(execucoes.status, status));
+      }
+
+      const data = await query.orderBy(desc(execucoes.iniciadoEm)).limit(limit).offset((page - 1) * limit);
+      const total = await db.select({ count: sql<number>`count(*)` }).from(execucoes);
+      
       return {
         data: data || [],
-        total: data.length,
+        total: total[0]?.count || 0,
         page,
         limit,
-        totalPages: Math.ceil(data.length / limit),
+        totalPages: Math.ceil((total[0]?.count || 0) / limit),
       };
     } catch (error) {
       console.error('Error getting execucoes:', error);
@@ -117,15 +149,46 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFaturas(params: { page?: number; limit?: number; statusAprovacao?: string }): Promise<any> {
-    const { page = 1, limit = 20 } = params;
+    const { page = 1, limit = 20, statusAprovacao } = params;
     try {
-      const data = await db.select().from(faturas).orderBy(desc(faturas.dataVencimento)).limit(limit);
+      let query = db.select({
+        id: faturas.id,
+        valor: faturas.valor,
+        dataVencimento: faturas.dataVencimento,
+        statusAprovacao: faturas.statusAprovacao,
+        createdAt: faturas.createdAt,
+        contrato: {
+          id: contratos.id,
+          servico: contratos.servico,
+          cliente: {
+            id: clientes.id,
+            nomeSat: clientes.nomeSat,
+            cnpj: clientes.cnpj
+          },
+          operadora: {
+            id: operadoras.id,
+            nome: operadoras.nome
+          }
+        }
+      })
+      .from(faturas)
+      .leftJoin(contratos, eq(faturas.contratoId, contratos.id))
+      .leftJoin(clientes, eq(contratos.clienteId, clientes.id))
+      .leftJoin(operadoras, eq(contratos.operadoraId, operadoras.id));
+
+      if (statusAprovacao && statusAprovacao !== 'todos') {
+        query = query.where(eq(faturas.statusAprovacao, statusAprovacao));
+      }
+
+      const data = await query.orderBy(desc(faturas.dataVencimento)).limit(limit).offset((page - 1) * limit);
+      const total = await db.select({ count: sql<number>`count(*)` }).from(faturas);
+      
       return {
         data: data || [],
-        total: data.length,
+        total: total[0]?.count || 0,
         page,
         limit,
-        totalPages: Math.ceil(data.length / limit),
+        totalPages: Math.ceil((total[0]?.count || 0) / limit),
       };
     } catch (error) {
       console.error('Error getting faturas:', error);
