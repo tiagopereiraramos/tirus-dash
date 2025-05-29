@@ -22,7 +22,7 @@ export default function Dashboard() {
 
   // Handle WebSocket messages
   if (lastMessage) {
-    const message = JSON.parse(lastMessage);
+    const message = lastMessage;
     switch (message.type) {
       case "execucao_criada":
         toast({
