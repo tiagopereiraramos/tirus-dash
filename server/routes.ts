@@ -6,6 +6,8 @@ import { insertExecucaoSchema, insertFaturaSchema, insertNotificacaoSchema } fro
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import pkg from 'pg';
+const { Client } = pkg;
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-here";
 
@@ -27,8 +29,408 @@ const authenticateToken = (req: any, res: any, next: any) => {
   });
 };
 
+// Conexão PostgreSQL para dados BGTELECOM
+const pgClient = new Client({
+  connectionString: process.env.DATABASE_URL
+});
+
+// Conectar ao PostgreSQL
+pgClient.connect().then(() => {
+  console.log('✅ PostgreSQL conectado - Dados BGTELECOM carregados');
+}).catch((err: any) => {
+  console.log('❌ PostgreSQL connection error:', err);
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Rotas de autenticação
+  
+  // ===== ROTAS PARA DADOS REAIS BGTELECOM =====
+  
+  // Dashboard com dados reais
+  app.get("/api/dashboard/metrics", async (req, res) => {
+    try {
+      const operadoras = await pgClient.query("SELECT COUNT(*) as total FROM operadoras WHERE status_ativo = true");
+      const clientes = await pgClient.query("SELECT COUNT(*) as total FROM clientes WHERE status_ativo = true");
+      const processos_pendentes = await pgClient.query("SELECT COUNT(*) as total FROM processos WHERE status_processo = 'PENDENTE_APROVACAO'");
+      const execucoes_ativas = await pgClient.query("SELECT COUNT(*) as total FROM execucoes WHERE status_execucao = 'EXECUTANDO'");
+      
+      res.json({
+        sucesso: true,
+        timestamp: new Date().toISOString(),
+        metricas: {
+          total_operadoras: parseInt(operadoras.rows[0].total),
+          total_clientes: parseInt(clientes.rows[0].total),
+          processos_pendentes: parseInt(processos_pendentes.rows[0].total),
+          execucoes_ativas: parseInt(execucoes_ativas.rows[0].total)
+        }
+      });
+    } catch (error) {
+      console.error('Erro no dashboard:', error);
+      res.status(500).json({ erro: "Erro interno do servidor" });
+    }
+  });
+
+  // Operadoras reais
+  app.get("/api/operadoras", async (req, res) => {
+    try {
+      const result = await pgClient.query(`
+        SELECT * FROM operadoras 
+        WHERE status_ativo = true 
+        ORDER BY nome
+      `);
+      
+      res.json({
+        sucesso: true,
+        operadoras: result.rows,
+        total: result.rows.length
+      });
+    } catch (error) {
+      console.error('Erro ao buscar operadoras:', error);
+      res.status(500).json({ erro: "Erro interno do servidor" });
+    }
+  });
+
+  // Clientes reais da BGTELECOM
+  app.get("/api/clientes", async (req, res) => {
+    try {
+      const { operadora_id, ativo, termo_busca } = req.query;
+      
+      let query = `
+        SELECT 
+          c.*,
+          o.nome as operadora_nome,
+          o.codigo as operadora_codigo
+        FROM clientes c
+        JOIN operadoras o ON c.operadora_id = o.id
+        WHERE 1=1
+      `;
+      const params: any[] = [];
+      
+      if (operadora_id) {
+        query += ` AND c.operadora_id = $${params.length + 1}`;
+        params.push(operadora_id);
+      }
+      
+      if (ativo !== undefined) {
+        query += ` AND c.status_ativo = $${params.length + 1}`;
+        params.push(ativo);
+      }
+      
+      if (termo_busca) {
+        query += ` AND (c.nome_sat ILIKE $${params.length + 1} OR c.razao_social ILIKE $${params.length + 2})`;
+        params.push(`%${termo_busca}%`, `%${termo_busca}%`);
+      }
+      
+      query += ` ORDER BY c.nome_sat`;
+      
+      const result = await pgClient.query(query, params);
+      
+      res.json({
+        sucesso: true,
+        clientes: result.rows,
+        total: result.rows.length
+      });
+    } catch (error) {
+      console.error('Erro ao buscar clientes:', error);
+      res.status(500).json({ erro: "Erro interno do servidor" });
+    }
+  });
+
+  // Faturas/Processos com dados reais
+  app.get("/api/faturas", async (req, res) => {
+    try {
+      const { statusAprovacao, operadora_id, mes_ano } = req.query;
+      
+      let query = `
+        SELECT 
+          p.*,
+          c.nome_sat,
+          c.razao_social,
+          o.nome as operadora_nome,
+          o.codigo as operadora_codigo
+        FROM processos p
+        JOIN clientes c ON p.cliente_id = c.id
+        JOIN operadoras o ON c.operadora_id = o.id
+        WHERE 1=1
+      `;
+      const params: any[] = [];
+      
+      if (statusAprovacao === 'pendente') {
+        query += ` AND p.status_processo = 'PENDENTE_APROVACAO'`;
+      } else if (statusAprovacao === 'aprovada') {
+        query += ` AND p.status_processo = 'APROVADA'`;
+      }
+      
+      if (operadora_id) {
+        query += ` AND o.id = $${params.length + 1}`;
+        params.push(operadora_id);
+      }
+      
+      if (mes_ano) {
+        query += ` AND p.mes_ano = $${params.length + 1}`;
+        params.push(mes_ano);
+      }
+      
+      query += ` ORDER BY p.created_at DESC`;
+      
+      const result = await pgClient.query(query, params);
+      
+      res.json({
+        sucesso: true,
+        data: result.rows,
+        total: result.rows.length
+      });
+    } catch (error) {
+      console.error('Erro ao buscar faturas:', error);
+      res.status(500).json({ erro: "Erro interno do servidor" });
+    }
+  });
+
+  // Aprovar fatura real
+  app.patch("/api/faturas/:faturaId/aprovar", async (req, res) => {
+    try {
+      const { faturaId } = req.params;
+      const { aprovadoPor, observacoes } = req.body;
+      
+      const result = await pgClient.query(`
+        UPDATE processos 
+        SET status_processo = 'APROVADA',
+            data_aprovacao = NOW(),
+            aprovado_por = $1,
+            observacoes = COALESCE($2, observacoes)
+        WHERE id = $3
+        RETURNING *
+      `, [aprovadoPor, observacoes, faturaId]);
+      
+      if (result.rows.length > 0) {
+        res.json({
+          sucesso: true,
+          mensagem: "Processo aprovado com sucesso",
+          processo: result.rows[0]
+        });
+      } else {
+        res.status(404).json({ erro: "Processo não encontrado" });
+      }
+    } catch (error) {
+      console.error('Erro ao aprovar fatura:', error);
+      res.status(500).json({ erro: "Erro interno do servidor" });
+    }
+  });
+
+  // Rejeitar fatura real
+  app.patch("/api/faturas/:faturaId/rejeitar", async (req, res) => {
+    try {
+      const { faturaId } = req.params;
+      const { motivoRejeicao } = req.body;
+      
+      const result = await pgClient.query(`
+        UPDATE processos 
+        SET status_processo = 'REJEITADA',
+            data_rejeicao = NOW(),
+            motivo_rejeicao = $1
+        WHERE id = $2
+        RETURNING *
+      `, [motivoRejeicao, faturaId]);
+      
+      if (result.rows.length > 0) {
+        res.json({
+          sucesso: true,
+          mensagem: "Processo rejeitado com sucesso",
+          processo: result.rows[0]
+        });
+      } else {
+        res.status(404).json({ erro: "Processo não encontrado" });
+      }
+    } catch (error) {
+      console.error('Erro ao rejeitar fatura:', error);
+      res.status(500).json({ erro: "Erro interno do servidor" });
+    }
+  });
+
+  // Execuções reais
+  app.get("/api/execucoes", async (req, res) => {
+    try {
+      const { status, operadora } = req.query;
+      
+      let query = `
+        SELECT 
+          e.*,
+          p.mes_ano,
+          c.nome_sat,
+          o.nome as operadora_nome,
+          o.codigo as operadora_codigo
+        FROM execucoes e
+        JOIN processos p ON e.processo_id = p.id
+        JOIN clientes c ON p.cliente_id = c.id
+        JOIN operadoras o ON c.operadora_id = o.id
+        WHERE 1=1
+      `;
+      const params: any[] = [];
+      
+      if (status) {
+        query += ` AND e.status_execucao = $${params.length + 1}`;
+        params.push(status);
+      }
+      
+      if (operadora) {
+        query += ` AND o.codigo = $${params.length + 1}`;
+        params.push(operadora);
+      }
+      
+      query += ` ORDER BY e.created_at DESC`;
+      
+      const result = await pgClient.query(query, params);
+      
+      res.json({
+        sucesso: true,
+        data: result.rows,
+        total: result.rows.length
+      });
+    } catch (error) {
+      console.error('Erro ao buscar execuções:', error);
+      res.status(500).json({ erro: "Erro interno do servidor" });
+    }
+  });
+
+  // Execuções ativas
+  app.get("/api/execucoes/ativas", async (req, res) => {
+    try {
+      const result = await pgClient.query(`
+        SELECT 
+          e.*,
+          p.mes_ano,
+          c.nome_sat,
+          o.nome as operadora_nome,
+          o.codigo as operadora_codigo
+        FROM execucoes e
+        JOIN processos p ON e.processo_id = p.id
+        JOIN clientes c ON p.cliente_id = c.id
+        JOIN operadoras o ON c.operadora_id = o.id
+        WHERE e.status_execucao = 'EXECUTANDO'
+        ORDER BY e.data_inicio DESC
+      `);
+      
+      res.json({
+        sucesso: true,
+        execucoes_ativas: result.rows,
+        total: result.rows.length
+      });
+    } catch (error) {
+      console.error('Erro ao buscar execuções ativas:', error);
+      res.status(500).json({ erro: "Erro interno do servidor" });
+    }
+  });
+
+  // Cancelar execução
+  app.post("/api/execucoes/:execucaoId/cancel", async (req, res) => {
+    try {
+      const { execucaoId } = req.params;
+      
+      const result = await pgClient.query(`
+        UPDATE execucoes 
+        SET status_execucao = 'CANCELADO',
+            data_fim = NOW(),
+            erro_detalhes = 'Cancelado pelo usuário'
+        WHERE id = $1 AND status_execucao = 'EXECUTANDO'
+        RETURNING *
+      `, [execucaoId]);
+      
+      if (result.rows.length > 0) {
+        res.json({
+          sucesso: true,
+          mensagem: "Execução cancelada com sucesso",
+          execucao: result.rows[0]
+        });
+      } else {
+        res.status(404).json({ erro: "Execução não encontrada ou não está em execução" });
+      }
+    } catch (error) {
+      console.error('Erro ao cancelar execução:', error);
+      res.status(500).json({ erro: "Erro interno do servidor" });
+    }
+  });
+
+  // Status dos RPAs
+  app.get("/api/rpa/status", async (req, res) => {
+    try {
+      const result = await pgClient.query(`
+        SELECT 
+          o.id,
+          o.nome,
+          o.codigo,
+          o.possui_rpa,
+          COUNT(e.id) as execucoes_ativas
+        FROM operadoras o
+        LEFT JOIN clientes c ON c.operadora_id = o.id
+        LEFT JOIN processos p ON p.cliente_id = c.id
+        LEFT JOIN execucoes e ON e.processo_id = p.id AND e.status_execucao = 'EXECUTANDO'
+        WHERE o.status_ativo = true
+        GROUP BY o.id, o.nome, o.codigo, o.possui_rpa
+        ORDER BY o.nome
+      `);
+      
+      const status_por_operadora: any = {};
+      result.rows.forEach((op: any) => {
+        status_por_operadora[op.codigo] = {
+          operadora: op.nome,
+          codigo: op.codigo,
+          possui_rpa: op.possui_rpa,
+          execucoes_ativas: parseInt(op.execucoes_ativas),
+          disponivel: op.possui_rpa && parseInt(op.execucoes_ativas) === 0
+        };
+      });
+      
+      res.json({
+        status: "success",
+        operadoras: status_por_operadora,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Erro ao obter status dos RPAs:', error);
+      res.status(500).json({ erro: "Erro interno do servidor" });
+    }
+  });
+
+  // Notificações baseadas em alertas do sistema
+  app.get("/api/notificacoes", async (req, res) => {
+    try {
+      const alertas = await pgClient.query(`
+        SELECT 
+          'PROCESSOS_PENDENTES' as tipo,
+          'Faturas Pendentes' as titulo,
+          CONCAT(COUNT(*), ' faturas aguardando aprovação') as descricao,
+          NOW() as data
+        FROM processos 
+        WHERE status_processo = 'PENDENTE_APROVACAO'
+        
+        UNION ALL
+        
+        SELECT 
+          'EXECUCOES_ATIVAS' as tipo,
+          'RPAs em Execução' as titulo,
+          CONCAT(COUNT(*), ' execuções RPA ativas') as descricao,
+          NOW() as data
+        FROM execucoes 
+        WHERE status_execucao = 'EXECUTANDO'
+      `);
+      
+      const notificacoes = alertas.rows.map((alerta: any, index: number) => ({
+        id: `alert_${index}`,
+        tipo: alerta.tipo,
+        titulo: alerta.titulo,
+        mensagem: alerta.descricao,
+        data: alerta.data,
+        lida: false
+      }));
+      
+      res.json(notificacoes);
+    } catch (error) {
+      console.error('Erro ao buscar notificações:', error);
+      res.status(500).json({ erro: "Erro interno do servidor" });
+    }
+  });
+
+  // ===== ROTAS DE AUTENTICAÇÃO EXISTENTES =====
+  
   app.post("/api/auth/register", async (req, res) => {
     try {
       const { username, email, password } = req.body;
