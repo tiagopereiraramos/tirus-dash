@@ -46,7 +46,7 @@ export default function Dashboard() {
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metricsData.totalOperadoras || operadorasData.length}</div>
+            <div className="text-2xl font-bold">{metricsData?.totalOperadoras || operadorasData.length}</div>
           </CardContent>
         </Card>
 
@@ -56,7 +56,7 @@ export default function Dashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metricsData.totalClientes || clientesData.length}</div>
+            <div className="text-2xl font-bold">{metricsData?.totalClientes || clientesData.length}</div>
           </CardContent>
         </Card>
 
@@ -66,7 +66,7 @@ export default function Dashboard() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metricsData.processosPendentes || 0}</div>
+            <div className="text-2xl font-bold">{metricsData?.processosPendentes || 0}</div>
           </CardContent>
         </Card>
 
@@ -76,7 +76,7 @@ export default function Dashboard() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metricsData.execucoesAtivas || 0}</div>
+            <div className="text-2xl font-bold">{metricsData?.execucoesAtivas || 0}</div>
           </CardContent>
         </Card>
       </div>
