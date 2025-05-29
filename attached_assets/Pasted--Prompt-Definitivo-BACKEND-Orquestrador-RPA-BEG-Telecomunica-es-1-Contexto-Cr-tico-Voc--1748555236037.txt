@@ -1,0 +1,253 @@
+# 🚀 Prompt Definitivo — BACKEND Orquestrador RPA BEG Telecomunicações
+
+## 1. Contexto Crítico
+
+Você é um **arquiteto/desenvolvedor sênior** especializado em Python, FastAPI, automação RPA com Selenium, e engenharia de software robusta.  
+Seu desafio é criar o backend de um sistema de orquestração de RPAs para gerenciamento automatizado de faturas de telecomunicações, **seguindo Clean Code, SOLID, tipagem forte, dataclasses, design patterns, rastreabilidade e testabilidade**.
+
+- **Todo o sistema deve ser desenvolvido 100% em português brasileiro (variáveis, métodos, docstrings, mensagens, interface).**
+- **Reutilize ao máximo o código legado dos RPAs; preserve XPaths, lógicas de scraping, seletores e arquivos de teste individuais.**
+- **Adapte as chamadas `self.pm` para a nova lógica de orquestração baseada em processos e execuções.**
+
+---
+
+## 2. Stack Tecnológica
+
+- Python 3.11+
+- FastAPI (API REST + WebSockets)
+- PostgreSQL (Banco principal)
+- Celery + Redis (Orquestração/Filas)
+- SQLAlchemy + Pydantic (ORM + validação/tipagem)
+- Alembic (Migrations)
+- Selenium (RPAs)
+- MinIO/S3 (Armazenamento de arquivos)
+- Docker (Containerização)
+- EvolutionAPI (WhatsApp)
+- SMTP (Email)
+- Telegram, Slack (opcional)
+
+---
+
+## 3. Regras de Negócio Essenciais
+
+### 3.1. Cadastro de Operadoras
+
+- Tabela separada, CRUD completo, campos obrigatórios:
+  - **Nome**
+  - **Código identificador único**
+  - **Possui RPA homologado** (`possui_rpa: bool`)
+  - **Status ativo/inativo**
+  - **URL Portal** (opcional)
+  - **Instruções/configuração** (opcional)
+- Só podem ser vinculadas a clientes e processos se estiverem ativas.
+- O backend deve expor endpoints claros para gestão de operadoras.
+
+### 3.2. Cadastro de Clientes
+
+- Cliente sempre vinculado a uma operadora ativa.
+- Unicidade: **CNPJ + Operadora + Unidade (Filial) + Serviço**.
+- Campos obrigatórios para automação ou upload manual.
+- Não permitir clientes em operadoras inativas.
+
+### 3.3. Controle de RPAs e Upload Manual
+
+- Se `possui_rpa = True`, download/upload sempre por RPA (usando padrão imutável de entrada/saída do RPA Base).
+- Se `possui_rpa = False`, habilitar upload manual de fatura (apenas para clientes válidos), sujeito ao workflow de aprovação.
+
+### 3.4. Criação, Unicidade, Importância da HASH e Rastreabilidade de Processos
+
+- **Identificador Único (Hash):**
+  - Gere sempre a hash do cliente/processo conforme a função `generate_hash_cad` (base: nome_filtro, operadora, servico, dados_sat, filtro, unidade).
+  - Use a hash como identificador principal para garantir unicidade, integridade e rastreabilidade, inclusive para evitar duplicidades e garantir o correto vínculo no SAT.
+- **Unicidade de processos:** Um processo para cada combinação **Cliente (hash) + Operadora + Mês/Ano**.
+- **Rastreabilidade:** Múltiplas execuções por processo, todas auditadas (logs, status, timestamps, usuário, parâmetros de entrada/saída).
+- **Exportação e busca detalhada do histórico de execuções e aprovações.**
+
+### 3.5. Workflow de Aprovação de Faturas
+
+- Todo processo, automático ou manual, **deve passar por workflow de aprovação** antes do envio ao SAT.
+- **Fluxo:**
+  1. Processo criado (automático/manual).
+  2. Download via RPA ou upload manual.
+  3. Fatura pendente de aprovação.
+  4. Usuário aprovador revisa, aprova ou rejeita.
+  5. Após aprovação, fatura liberada para upload SAT (RPA SAT).
+  6. Logs e notificações automáticas em todas as etapas.
+  7. Em caso de rejeição, processo pode ser reaberto para nova tentativa.
+
+### 3.6. Notificações, Auditoria e Controle Manual
+
+- Todas as ações relevantes (upload manual, aprovação, rejeição) geram logs de auditoria.
+- Notificações automáticas (WhatsApp EvolutionAPI, email, etc.) para usuários responsáveis.
+- O painel administrativo e a API devem permitir consulta, filtragem e exportação do histórico.
+
+---
+
+## 4. Modelagem de Dados (PostgreSQL)
+
+```sql
+CREATE TABLE operadoras (
+    id UUID PRIMARY KEY,
+    nome VARCHAR(100) UNIQUE NOT NULL,
+    codigo VARCHAR(20) UNIQUE NOT NULL,
+    possui_rpa BOOLEAN DEFAULT FALSE,
+    status_ativo BOOLEAN DEFAULT TRUE,
+    url_portal VARCHAR(500),
+    instrucoes_acesso TEXT,
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE clientes (
+    id UUID PRIMARY KEY,
+    hash_unico VARCHAR(50) UNIQUE NOT NULL,
+    razao_social VARCHAR(255) NOT NULL,
+    nome_sat VARCHAR(255) NOT NULL,
+    cnpj VARCHAR(20) NOT NULL,
+    operadora_id UUID REFERENCES operadoras(id),
+    filtro VARCHAR(255),
+    servico VARCHAR(255),
+    dados_sat TEXT,
+    unidade VARCHAR(100) NOT NULL,
+    site_emissao VARCHAR(255),
+    login_portal VARCHAR(100),
+    senha_portal VARCHAR(100),
+    cpf VARCHAR(20),
+    status_ativo BOOLEAN DEFAULT TRUE,
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (cnpj, operadora_id, unidade, servico)
+);
+
+CREATE TABLE processos (
+    id UUID PRIMARY KEY,
+    cliente_id UUID REFERENCES clientes(id),
+    mes_ano VARCHAR(7) NOT NULL,
+    status_processo VARCHAR(50) DEFAULT 'AGUARDANDO_DOWNLOAD',
+    url_fatura VARCHAR(500),
+    caminho_s3_fatura VARCHAR(500),
+    data_vencimento DATE,
+    valor_fatura DECIMAL(15,2),
+    aprovado_por_usuario_id UUID,
+    data_aprovacao TIMESTAMP,
+    enviado_para_sat BOOLEAN DEFAULT FALSE,
+    data_envio_sat TIMESTAMP,
+    upload_manual BOOLEAN DEFAULT FALSE,
+    criado_automaticamente BOOLEAN DEFAULT TRUE,
+    observacoes TEXT,
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (cliente_id, mes_ano)
+);
+
+CREATE TABLE execucoes (
+    id UUID PRIMARY KEY,
+    processo_id UUID REFERENCES processos(id),
+    tipo_execucao VARCHAR(50) CHECK (tipo_execucao IN ('DOWNLOAD_FATURA', 'UPLOAD_SAT', 'UPLOAD_MANUAL')),
+    status_execucao VARCHAR(50) CHECK (status_execucao IN ('EXECUTANDO', 'CONCLUIDO', 'FALHOU', 'TENTANDO_NOVAMENTE')),
+    parametros_entrada JSONB,
+    resultado_saida JSONB,
+    data_inicio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_fim TIMESTAMP,
+    mensagem_log TEXT,
+    url_arquivo_s3 VARCHAR(500),
+    numero_tentativa INTEGER DEFAULT 1,
+    detalhes_erro JSONB,
+    executado_por_usuario_id UUID REFERENCES usuarios(id),
+    ip_origem VARCHAR(45),
+    user_agent TEXT
+);
+
+CREATE TABLE usuarios (
+    id UUID PRIMARY KEY,
+    nome_completo VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    telefone VARCHAR(20),
+    perfil_usuario VARCHAR(50) CHECK (perfil_usuario IN ('ADMINISTRADOR', 'APROVADOR', 'OPERADOR')),
+    status_ativo BOOLEAN DEFAULT TRUE,
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE notificacoes (
+    id UUID PRIMARY KEY,
+    tipo_notificacao VARCHAR(50) CHECK (tipo_notificacao IN ('EMAIL', 'WHATSAPP', 'TELEGRAM', 'SLACK')),
+    destinatario VARCHAR(255) NOT NULL,
+    assunto VARCHAR(255),
+    mensagem TEXT NOT NULL,
+    status_envio VARCHAR(50) DEFAULT 'PENDENTE',
+    tentativas_envio INTEGER DEFAULT 0,
+    data_envio TIMESTAMP,
+    mensagem_erro TEXT,
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE agendamentos (
+    id UUID PRIMARY KEY,
+    nome_agendamento VARCHAR(255) NOT NULL,
+    descricao TEXT,
+    cron_expressao VARCHAR(100) NOT NULL,
+    tipo_agendamento VARCHAR(50) CHECK (tipo_agendamento IN ('CRIAR_PROCESSOS_MENSAIS', 'EXECUTAR_DOWNLOADS', 'ENVIAR_RELATORIOS')),
+    status_ativo BOOLEAN DEFAULT TRUE,
+    proxima_execucao TIMESTAMP,
+    ultima_execucao TIMESTAMP,
+    parametros_execucao JSONB,
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+## 5. RPA Base Concentrador e Integração Legado
+
+- Todos os RPAs devem herdar de uma classe imutável `RPABase`, com entrada/saída padronizadas (`ParametrosEntradaPadrao` e `ResultadoSaidaPadrao`).
+- Um `ConcentradorRPA` centraliza a escolha do RPA correto por filtro/código de operadora.
+- **Reutilize todo código legado dos RPAs:**  
+  - Preserve XPaths, lógica de scraping, seletores, testes unitários isolados.
+  - Adapte apenas o controle de processos e execuções para se integrar à nova arquitetura.
+- Assegure que execuções manuais (operadoras sem RPA) também sejam auditadas, rastreadas e entrem no workflow de aprovação.
+
+---
+
+## 6. Endpoints Backend (Sugestão)
+
+- `/api/operadoras/` — CRUD de operadoras
+- `/api/clientes/` — CRUD de clientes
+- `/api/processos/` — CRUD de processos, criação mensal e busca
+- `/api/execucoes/` — CRUD e consulta de execuções
+- `/api/faturas/upload-manual/` — Upload manual de fatura
+- `/api/aprovacoes/` — Workflow de aprovação/rejeição de faturas
+- `/api/notificacoes/` — Notificações e histórico
+- `/api/agendamentos/` — Agendamento de tarefas automáticas
+- `/api/rpa/executar-download/` — Disparo de download via RPA Base
+- `/api/rpa/executar-upload-sat/` — Envio SAT via RPA Base
+- `/api/dashboard/` — Métricas e logs em tempo real (WebSocket)
+- **Todos os endpoints, models, docstrings e mensagens em português BR**
+
+---
+
+## 7. Requisitos Técnicos & Arquiteturais
+
+- **Arquitetura Limpa:** Separe domínio, aplicação, infraestrutura e apresentação.
+- **Tipagem forte:** Use dataclasses, enums, type hints e validação Pydantic.
+- **Testabilidade:** Testes unitários e integração (>85% coverage) — mantenha arquivos de teste individuais dos RPAs.
+- **Rastreabilidade/Auditoria:** Logs detalhados de todas as execuções, aprovações, rejeições e uploads manuais.
+- **Notificações automáticas:** E-mail, WhatsApp (EvolutionAPI), etc.
+- **Deployment:** Docker Compose, variáveis de ambiente, scripts de setup.
+- **Documentação:** OpenAPI/Swagger + README técnico e de arquitetura.
+- **Performance e robustez:** Utilizar Celery para filas, Redis para cache/processos, pooling de conexões, transações seguras.
+
+---
+
+## 8. Observações Finais
+
+- **Leia arquivo por arquivo do legado, preserve e adapte o que for necessário!**
+- **Implemente o hash de identificação como regra central de unicidade e rastreabilidade!**
+- **Workflow de aprovação é obrigatório para todos os fluxos (RPA/Manual)!**
+- **Frontend será Next.js/Material UI inspirado em ngx-admin, mas concentre-se aqui APENAS NO BACKEND.**
+- **Tudo em português brasileiro, limpo e padronizado!**
+
+---
+
+**Desenvolvido por: Tiago Pereira Ramos**  
+**Data: 29/05/2025**  
+**Prompt: Backend Orquestrador RPA BEG Telecomunicações**
