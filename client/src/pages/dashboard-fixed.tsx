@@ -36,6 +36,7 @@ export default function Dashboard() {
     );
   }
 
+  // Os dados já estão na estrutura correta
   const metricsData = metrics || { totalOperadoras: 0, totalClientes: 0, processosPendentes: 0, execucoesAtivas: 0 };
   const execucoesData = Array.isArray(execucoes) ? execucoes : [];
   const operadorasData = Array.isArray(operadoras) ? operadoras : [];
