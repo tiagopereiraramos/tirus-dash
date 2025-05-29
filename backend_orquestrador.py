@@ -768,9 +768,10 @@ async def executar_rpa_operadora(
                 "processos_encontrados": 0
             }
         
-        # Criar execuções para cada processo
+        # Criar execuções e executar via Celery
         execucoes_criadas = []
         for processo in processos:
+            # Criar execução
             execucao = Execucao(
                 processo_id=processo.id,
                 tipo_execucao=TipoExecucao.DOWNLOAD_FATURA.value,
@@ -783,7 +784,34 @@ async def executar_rpa_operadora(
                 mensagem_log=f"Execução RPA {operadora_codigo} iniciada"
             )
             db.add(execucao)
+            db.flush()
             execucoes_criadas.append(execucao.id)
+            
+            # Preparar parâmetros do cliente para Celery
+            parametros_cliente = {
+                "cliente_hash": processo.cliente.hash_unico,
+                "url_portal": operadora.url_portal,
+                "login_portal": processo.cliente.login_portal,
+                "senha_portal": processo.cliente.senha_portal,
+                "cpf": processo.cliente.cpf,
+                "filtro": processo.cliente.filtro,
+                "nome_sat": processo.cliente.nome_sat,
+                "dados_sat": processo.cliente.dados_sat,
+                "unidade": processo.cliente.unidade,
+                "servico": processo.cliente.servico
+            }
+            
+            # Executar via Celery (importar localmente para evitar circular imports)
+            try:
+                from backend.services.orquestrador_celery import executar_download_fatura_rpa
+                executar_download_fatura_rpa.delay(
+                    processo_id=str(processo.id),
+                    operadora_codigo=operadora_codigo,
+                    parametros_cliente=parametros_cliente
+                )
+            except Exception as e:
+                logger.warning(f"Erro ao enviar task para Celery: {e}")
+                # Continua mesmo se Celery não estiver rodando
         
         db.commit()
         

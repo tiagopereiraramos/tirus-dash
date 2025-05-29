@@ -48,6 +48,259 @@ celery_app.conf.update(
 
 logger = logging.getLogger(__name__)
 
+# === TASKS CELERY PARA EXECUÇÃO DOS RPAS ===
+
+@celery_app.task(bind=True, name="executar_download_fatura_rpa")
+def executar_download_fatura_rpa(self, processo_id: str, operadora_codigo: str, parametros_cliente: Dict[str, Any]):
+    """
+    Task Celery para executar download de fatura via RPA
+    """
+    logger.info(f"Iniciando download RPA - Processo: {processo_id}, Operadora: {operadora_codigo}")
+    
+    try:
+        # Importar o concentrador RPA
+        from ..rpa.rpa_base import concentrador_rpa, TipoOperacao, ParametrosEntradaPadrao
+        
+        # Preparar parâmetros padronizados
+        parametros_entrada = ParametrosEntradaPadrao(
+            id_processo=processo_id,
+            id_cliente=parametros_cliente.get("cliente_hash", ""),
+            operadora_codigo=operadora_codigo,
+            url_portal=parametros_cliente.get("url_portal", ""),
+            usuario=parametros_cliente.get("login_portal", ""),
+            senha=parametros_cliente.get("senha_portal", ""),
+            cpf=parametros_cliente.get("cpf"),
+            filtro=parametros_cliente.get("filtro"),
+            nome_sat=parametros_cliente.get("nome_sat", ""),
+            dados_sat=parametros_cliente.get("dados_sat", ""),
+            unidade=parametros_cliente.get("unidade", ""),
+            servico=parametros_cliente.get("servico", "")
+        )
+        
+        # Executar RPA através do concentrador
+        resultado = concentrador_rpa.executar_operacao(
+            operacao=TipoOperacao.DOWNLOAD_FATURA,
+            parametros=parametros_entrada
+        )
+        
+        # Atualizar processo no banco de dados
+        from ..models.database import get_db_session
+        from ..models.processo import Processo, Execucao, StatusProcesso, StatusExecucao
+        
+        with get_db_session() as db:
+            # Buscar processo
+            processo = db.query(Processo).filter(Processo.id == processo_id).first()
+            if processo:
+                if resultado.sucesso:
+                    processo.status_processo = StatusProcesso.FATURA_BAIXADA.value
+                    processo.caminho_s3_fatura = resultado.url_s3
+                    if resultado.dados_extraidos:
+                        processo.valor_fatura = resultado.dados_extraidos.get("valor_fatura")
+                        processo.data_vencimento = resultado.dados_extraidos.get("data_vencimento")
+                else:
+                    processo.status_processo = StatusProcesso.ERRO.value
+                
+                # Atualizar execução
+                execucao = db.query(Execucao).filter(
+                    Execucao.processo_id == processo_id,
+                    Execucao.status_execucao == StatusExecucao.EXECUTANDO.value
+                ).first()
+                
+                if execucao:
+                    execucao.status_execucao = StatusExecucao.CONCLUIDO.value if resultado.sucesso else StatusExecucao.FALHOU.value
+                    execucao.data_fim = resultado.timestamp_fim
+                    execucao.resultado_saida = {
+                        "sucesso": resultado.sucesso,
+                        "arquivo_baixado": resultado.arquivo_baixado,
+                        "url_s3": resultado.url_s3,
+                        "dados_extraidos": resultado.dados_extraidos,
+                        "tempo_execucao": resultado.tempo_execucao_segundos
+                    }
+                    execucao.mensagem_log = resultado.mensagem
+                    execucao.detalhes_erro = {"logs": resultado.logs_execucao} if not resultado.sucesso else None
+                
+                db.commit()
+        
+        logger.info(f"Download RPA concluído - Processo: {processo_id}, Sucesso: {resultado.sucesso}")
+        return {
+            "processo_id": processo_id,
+            "sucesso": resultado.sucesso,
+            "mensagem": resultado.mensagem,
+            "arquivo_baixado": resultado.arquivo_baixado
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro no download RPA - Processo: {processo_id}, Erro: {str(e)}")
+        
+        # Atualizar processo como erro
+        try:
+            from ..models.database import get_db_session
+            from ..models.processo import Processo, Execucao, StatusProcesso, StatusExecucao
+            
+            with get_db_session() as db:
+                processo = db.query(Processo).filter(Processo.id == processo_id).first()
+                if processo:
+                    processo.status_processo = StatusProcesso.ERRO.value
+                
+                execucao = db.query(Execucao).filter(
+                    Execucao.processo_id == processo_id,
+                    Execucao.status_execucao == StatusExecucao.EXECUTANDO.value
+                ).first()
+                
+                if execucao:
+                    execucao.status_execucao = StatusExecucao.FALHOU.value
+                    execucao.data_fim = datetime.now()
+                    execucao.mensagem_log = f"Erro na execução: {str(e)}"
+                    execucao.detalhes_erro = {"erro": str(e), "task_id": self.request.id}
+                
+                db.commit()
+        except Exception as db_error:
+            logger.error(f"Erro ao atualizar banco após falha: {str(db_error)}")
+        
+        # Re-lançar a exceção para o Celery
+        raise
+
+@celery_app.task(bind=True, name="executar_upload_sat_rpa")
+def executar_upload_sat_rpa(self, processo_id: str, parametros_sat: Dict[str, Any]):
+    """
+    Task Celery para executar upload para SAT via RPA
+    """
+    logger.info(f"Iniciando upload SAT - Processo: {processo_id}")
+    
+    try:
+        # Importar o concentrador RPA
+        from ..rpa.rpa_base import concentrador_rpa, TipoOperacao, ParametrosEntradaPadrao
+        
+        # Preparar parâmetros padronizados
+        parametros_entrada = ParametrosEntradaPadrao(
+            id_processo=processo_id,
+            id_cliente=parametros_sat.get("cliente_hash", ""),
+            operadora_codigo="SAT",
+            url_portal=parametros_sat.get("url_sat", ""),
+            usuario=parametros_sat.get("usuario_sat", ""),
+            senha=parametros_sat.get("senha_sat", ""),
+            nome_sat=parametros_sat.get("nome_sat", ""),
+            dados_sat=parametros_sat.get("dados_sat", ""),
+            unidade=parametros_sat.get("unidade", "")
+        )
+        
+        # Executar RPA através do concentrador
+        resultado = concentrador_rpa.executar_operacao(
+            operacao=TipoOperacao.UPLOAD_SAT,
+            parametros=parametros_entrada
+        )
+        
+        # Atualizar processo no banco de dados
+        from ..models.database import get_db_session
+        from ..models.processo import Processo, Execucao, StatusProcesso, StatusExecucao, TipoExecucao
+        
+        with get_db_session() as db:
+            # Buscar processo
+            processo = db.query(Processo).filter(Processo.id == processo_id).first()
+            if processo:
+                if resultado.sucesso:
+                    processo.status_processo = StatusProcesso.ENVIADA_SAT.value
+                    processo.enviado_para_sat = True
+                    processo.data_envio_sat = resultado.timestamp_fim
+                else:
+                    processo.status_processo = StatusProcesso.ERRO.value
+                
+                # Criar nova execução para upload SAT
+                execucao = Execucao(
+                    processo_id=processo_id,
+                    tipo_execucao=TipoExecucao.UPLOAD_SAT.value,
+                    status_execucao=StatusExecucao.CONCLUIDO.value if resultado.sucesso else StatusExecucao.FALHOU.value,
+                    parametros_entrada=parametros_sat,
+                    resultado_saida={
+                        "sucesso": resultado.sucesso,
+                        "dados_especificos": resultado.dados_especificos,
+                        "tempo_execucao": resultado.tempo_execucao_segundos
+                    },
+                    data_inicio=resultado.timestamp_inicio,
+                    data_fim=resultado.timestamp_fim,
+                    mensagem_log=resultado.mensagem,
+                    detalhes_erro={"logs": resultado.logs_execucao} if not resultado.sucesso else None
+                )
+                db.add(execucao)
+                db.commit()
+        
+        logger.info(f"Upload SAT concluído - Processo: {processo_id}, Sucesso: {resultado.sucesso}")
+        return {
+            "processo_id": processo_id,
+            "sucesso": resultado.sucesso,
+            "mensagem": resultado.mensagem
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro no upload SAT - Processo: {processo_id}, Erro: {str(e)}")
+        raise
+
+@celery_app.task(bind=True, name="processar_operadora_completa")
+def processar_operadora_completa(self, operadora_codigo: str, mes_ano: str = None):
+    """
+    Task Celery para processar todos os clientes de uma operadora
+    """
+    logger.info(f"Iniciando processamento completo - Operadora: {operadora_codigo}")
+    
+    try:
+        from ..models.database import get_db_session
+        from ..models.processo import Operadora, Cliente, Processo, StatusProcesso
+        
+        mes_atual = mes_ano or datetime.now().strftime("%Y-%m")
+        processos_executados = 0
+        
+        with get_db_session() as db:
+            # Buscar operadora
+            operadora = db.query(Operadora).filter(
+                Operadora.codigo == operadora_codigo.upper(),
+                Operadora.possui_rpa == True,
+                Operadora.status_ativo == True
+            ).first()
+            
+            if not operadora:
+                raise ValueError(f"Operadora {operadora_codigo} não encontrada ou inativa")
+            
+            # Buscar processos pendentes
+            processos = db.query(Processo).join(Cliente).filter(
+                Cliente.operadora_id == operadora.id,
+                Processo.mes_ano == mes_atual,
+                Processo.status_processo == StatusProcesso.AGUARDANDO_DOWNLOAD.value
+            ).all()
+            
+            for processo in processos:
+                # Preparar parâmetros do cliente
+                parametros_cliente = {
+                    "cliente_hash": processo.cliente.hash_unico,
+                    "url_portal": operadora.url_portal,
+                    "login_portal": processo.cliente.login_portal,
+                    "senha_portal": processo.cliente.senha_portal,
+                    "cpf": processo.cliente.cpf,
+                    "filtro": processo.cliente.filtro,
+                    "nome_sat": processo.cliente.nome_sat,
+                    "dados_sat": processo.cliente.dados_sat,
+                    "unidade": processo.cliente.unidade,
+                    "servico": processo.cliente.servico
+                }
+                
+                # Executar download assíncrono
+                executar_download_fatura_rpa.delay(
+                    processo_id=str(processo.id),
+                    operadora_codigo=operadora_codigo,
+                    parametros_cliente=parametros_cliente
+                )
+                processos_executados += 1
+        
+        logger.info(f"Processamento iniciado - Operadora: {operadora_codigo}, Processos: {processos_executados}")
+        return {
+            "operadora": operadora_codigo,
+            "processos_executados": processos_executados,
+            "mes_ano": mes_atual
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro no processamento da operadora {operadora_codigo}: {str(e)}")
+        raise
+
 class OrquestradorRPA:
     """
     Orquestrador principal de RPAs usando Celery + Redis
