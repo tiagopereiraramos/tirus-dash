@@ -25,6 +25,9 @@ function Router() {
       <Route path="/aprovacoes" component={Aprovacoes} />
       <Route path="/operadoras" component={Operadoras} />
       <Route path="/clientes" component={Clientes} />
+      <Route path="/faturas" component={Faturas} />
+      <Route path="/notificacoes" component={Notificacoes} />
+      <Route path="/configuracoes" component={Configuracoes} />
       <Route component={NotFound} />
     </Switch>
   );
