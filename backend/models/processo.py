@@ -3,7 +3,7 @@ Modelo de Processo
 Conforme especificação do manual da BGTELECOM
 """
 
-from sqlalchemy import Column, String, DateTime, Boolean, Text, Decimal, ForeignKey
+from sqlalchemy import Column, String, DateTime, Boolean, Text, ForeignKey, Numeric
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
@@ -33,7 +33,7 @@ class Processo(Base):
     
     # Dados da fatura
     data_vencimento = Column(DateTime)
-    valor_fatura = Column(Decimal(10, 2))
+    valor_fatura = Column(Numeric(10, 2))
     
     # Aprovação
     aprovado_por_usuario_id = Column(String, ForeignKey("usuarios.id"))
