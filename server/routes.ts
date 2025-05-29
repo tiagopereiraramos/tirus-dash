@@ -6,8 +6,6 @@ import { insertExecucaoSchema, insertFaturaSchema, insertNotificacaoSchema } fro
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import pkg from 'pg';
-const { Client } = pkg;
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-here";
 
@@ -29,21 +27,9 @@ const authenticateToken = (req: any, res: any, next: any) => {
   });
 };
 
-// Conexão PostgreSQL para dados BGTELECOM
-const pgClient = new Client({
-  connectionString: process.env.DATABASE_URL
-});
-
-// Conectar ao PostgreSQL
-pgClient.connect().then(() => {
-  console.log('✅ PostgreSQL conectado - Dados BGTELECOM carregados');
-}).catch((err: any) => {
-  console.log('❌ PostgreSQL connection error:', err);
-});
-
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // ===== ROTAS PARA DADOS REAIS BGTELECOM =====
+  // ===== ROTAS COM DADOS REAIS BGTELECOM =====
   
   // Dashboard com dados reais
   app.get("/api/dashboard/metrics", async (req, res) => {
