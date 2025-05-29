@@ -154,13 +154,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Retornar dados reais confirmados da BGTELECOM PostgreSQL
       res.json({
-        success: true,
-        data: {
-          totalOperadoras: 6,
-          totalClientes: 12,
-          processosPendentes: 12,
-          execucoesAtivas: 3
-        }
+        totalOperadoras: 6,
+        totalClientes: 12,
+        processosPendentes: 12,
+        execucoesAtivas: 3
       });
     } catch (error) {
       console.error("Erro dashboard:", error);
@@ -217,10 +214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       ];
 
-      res.json({
-        success: true,
-        data: execucoesReais
-      });
+      res.json(execucoesReais);
     } catch (error) {
       console.error("Erro execuções:", error);
       res.status(500).json({ error: "Erro ao buscar execuções" });
@@ -239,10 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { id: 6, nome: "SAT", codigo: "SAT", possui_rpa: true, status_ativo: true }
       ];
 
-      res.json({
-        success: true,
-        data: operadorasReais
-      });
+      res.json(operadorasReais);
     } catch (error) {
       console.error("Erro operadoras:", error);
       res.status(500).json({ error: "Erro ao buscar operadoras" });
@@ -303,10 +294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       ];
 
-      res.json({
-        success: true,
-        data: clientesReais
-      });
+      res.json(clientesReais);
     } catch (error) {
       console.error("Erro clientes:", error);
       res.status(500).json({ error: "Erro ao buscar clientes" });
