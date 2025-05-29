@@ -13,6 +13,8 @@ import Clientes from "@/pages/clientes";
 import Faturas from "@/pages/faturas";
 import Notificacoes from "@/pages/notificacoes";
 import Configuracoes from "@/pages/configuracoes";
+import Login from "@/pages/login";
+import Cadastro from "@/pages/cadastro";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { WebSocketProvider } from "@/lib/websocket";

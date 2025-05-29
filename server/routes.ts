@@ -4,8 +4,118 @@ import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { insertExecucaoSchema, insertFaturaSchema, insertNotificacaoSchema } from "@shared/schema";
 import { z } from "zod";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-here";
+
+// Middleware para verificar autenticação
+const authenticateToken = (req: any, res: any, next: any) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ message: 'Token de acesso requerido' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+    if (err) {
+      return res.status(403).json({ message: 'Token inválido' });
+    }
+    req.user = user;
+    next();
+  });
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Rotas de autenticação
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { username, email, password } = req.body;
+
+      if (!username || !email || !password) {
+        return res.status(400).json({ message: "Todos os campos são obrigatórios" });
+      }
+
+      // Verifica se usuário já existe
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Usuário já existe" });
+      }
+
+      // Hash da senha
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+      // Cria o usuário
+      const newUser = await storage.createUser({
+        username,
+        email,
+        password: hashedPassword
+      });
+
+      res.status(201).json({ 
+        message: "Usuário criado com sucesso",
+        user: { id: newUser.id, username: newUser.username, email: newUser.email }
+      });
+    } catch (error) {
+      console.error("Erro no cadastro:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+
+      if (!username || !password) {
+        return res.status(400).json({ message: "Usuário e senha são obrigatórios" });
+      }
+
+      // Busca o usuário
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ message: "Credenciais inválidas" });
+      }
+
+      // Verifica a senha
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Credenciais inválidas" });
+      }
+
+      // Gera o token JWT
+      const token = jwt.sign(
+        { id: user.id, username: user.username },
+        JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+
+      res.json({
+        message: "Login realizado com sucesso",
+        token,
+        user: { id: user.id, username: user.username, email: user.email }
+      });
+    } catch (error) {
+      console.error("Erro no login:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.get("/api/auth/me", authenticateToken, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      res.json({ id: user.id, username: user.username, email: user.email });
+    } catch (error) {
+      console.error("Erro ao buscar usuário:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   // Dashboard metrics
   app.get("/api/dashboard/metrics", async (req, res) => {
     try {
