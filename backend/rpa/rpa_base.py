@@ -1,251 +1,245 @@
 """
-RPA Base - Classe abstrata para todos os RPAs
+RPA Base Concentrador - Sistema de Orquestração RPA BEG Telecomunicações
+Padrão imutável de entrada/saída conforme especificação do manual
 Desenvolvido por: Tiago Pereira Ramos
+Data: 29/05/2025
 """
 
-import os
-import time
-import uuid
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from typing import Dict, Any, Optional, List
+from enum import Enum
+import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Any
-from sqlalchemy.orm import Session
 
-from config.database import SessionLocal
-from models.cliente import Cliente
-from models.processo import Processo
-from models.execucao import Execucao
-from utils.selenium_driver import SeleniumDriver
-from utils.file_manager import FileManager
-from utils.logger import RPALogger
+class TipoOperacao(Enum):
+    """Tipos de operação suportados pelo RPA Base"""
+    DOWNLOAD_FATURA = "download_fatura"
+    UPLOAD_SAT = "upload_sat"
 
+class StatusExecucao(Enum):
+    """Status de execução padronizado"""
+    INICIADO = "iniciado"
+    EM_PROGRESSO = "em_progresso"
+    SUCESSO = "sucesso"
+    ERRO = "erro"
+    TIMEOUT = "timeout"
+
+@dataclass(frozen=True)
+class ParametrosEntradaPadrao:
+    """
+    Estrutura imutável de entrada padronizada para todos os RPAs
+    Conforme especificação do manual da BGTELECOM
+    """
+    id_processo: str
+    id_cliente: str
+    operadora_codigo: str
+    url_portal: str
+    usuario: str
+    senha: str
+    cpf: Optional[str] = None
+    filtro: Optional[str] = None
+    nome_sat: str = ""
+    dados_sat: str = ""
+    unidade: str = ""
+    servico: str = ""
+
+@dataclass
+class ResultadoSaidaPadrao:
+    """
+    Estrutura padronizada de saída para todos os RPAs
+    Conforme especificação do manual da BGTELECOM
+    """
+    sucesso: bool
+    status: StatusExecucao
+    mensagem: str
+    arquivo_baixado: Optional[str] = None
+    url_s3: Optional[str] = None
+    dados_extraidos: Dict[str, Any] = field(default_factory=dict)
+    tempo_execucao_segundos: float = 0.0
+    tentativa_numero: int = 1
+    timestamp_inicio: Optional[datetime] = None
+    timestamp_fim: Optional[datetime] = None
+    logs_execucao: List[str] = field(default_factory=list)
+    screenshots_debug: List[str] = field(default_factory=list)
+    dados_especificos: Dict[str, Any] = field(default_factory=dict)
 
 class RPABase(ABC):
-    """Classe base abstrata para todos os RPAs"""
+    """
+    Classe base abstrata para todos os RPAs
+    Padrão imutável conforme manual da BGTELECOM
+    """
     
-    def __init__(self, operadora: str):
-        self.operadora = operadora
-        self.driver = None
-        self.db: Session = SessionLocal()
-        self.logger = RPALogger(operadora)
-        self.file_manager = FileManager()
-        self.status = "PARADO"
-        self.processo_atual = None
-        self.execucao_atual = None
+    def __init__(self):
+        self.logger = logging.getLogger(f"RPA.{self.__class__.__name__}")
     
     @abstractmethod
-    def fazer_login(self, login: str, senha: str) -> bool:
-        """Método abstrato para fazer login no portal da operadora"""
+    def executar_download(self, parametros: ParametrosEntradaPadrao) -> ResultadoSaidaPadrao:
+        """
+        Executa download de fatura da operadora
+        
+        Args:
+            parametros: Parâmetros padronizados de entrada
+            
+        Returns:
+            ResultadoSaidaPadrao: Resultado da execução
+        """
         pass
     
     @abstractmethod
-    def buscar_faturas(self, cliente: Cliente, mes_ano: str) -> List[Dict[str, Any]]:
-        """Método abstrato para buscar faturas"""
+    def executar_upload_sat(self, parametros: ParametrosEntradaPadrao) -> ResultadoSaidaPadrao:
+        """
+        Executa upload de fatura para o SAT
+        
+        Args:
+            parametros: Parâmetros padronizados de entrada
+            
+        Returns:
+            ResultadoSaidaPadrao: Resultado da execução
+        """
         pass
     
-    @abstractmethod
-    def baixar_fatura(self, cliente: Cliente, dados_fatura: Dict[str, Any]) -> str:
-        """Método abstrato para baixar fatura"""
-        pass
+    def _log_operacao(self, operacao: str, parametros: ParametrosEntradaPadrao, resultado: ResultadoSaidaPadrao):
+        """
+        Registra log padronizado da operação
+        """
+        self.logger.info(f"""
+        === LOG OPERAÇÃO RPA ===
+        Operação: {operacao}
+        Cliente: {parametros.id_cliente}
+        Processo: {parametros.id_processo}
+        Operadora: {parametros.operadora_codigo}
+        Status: {resultado.status.value}
+        Sucesso: {resultado.sucesso}
+        Tempo: {resultado.tempo_execucao_segundos}s
+        Mensagem: {resultado.mensagem}
+        =======================
+        """)
+
+class ConcentradorRPA:
+    """
+    Concentrador central de RPAs seguindo padrão do manual da BGTELECOM
+    Responsável por direcionar operações baseadas no filtro/operadora
+    """
     
-    def inicializar_driver(self, headless: bool = True) -> bool:
-        """Inicializa o driver Selenium"""
+    def __init__(self):
+        self.logger = logging.getLogger("ConcentradorRPA")
+        self.rpas_registrados: Dict[str, RPABase] = {}
+        self._registrar_rpas_disponiveis()
+    
+    def _registrar_rpas_disponiveis(self) -> None:
+        """
+        Registra todos os RPAs disponíveis no sistema
+        Preservando 100% do código legado conforme manual
+        """
         try:
-            self.driver = SeleniumDriver(headless=headless)
-            self.driver.inicializar()
-            self.logger.info(f"Driver inicializado para {self.operadora}")
-            return True
-        except Exception as e:
-            self.logger.error(f"Erro ao inicializar driver: {e}")
-            return False
+            # Import dos RPAs legados adaptados
+            from .embratel_rpa import EmbratelRPA
+            from .digitalnet_rpa import DigitalnetRPA
+            from .azuton_rpa import AzutonRPA
+            from .vivo_rpa import VivoRPA
+            from .oi_rpa import OiRPA
+            from .sat_rpa import SatRPA
+            
+            self.rpas_registrados = {
+                "EMB": EmbratelRPA(),
+                "EMBRATEL": EmbratelRPA(),
+                "DIG": DigitalnetRPA(),
+                "DIGITALNET": DigitalnetRPA(),
+                "AZU": AzutonRPA(),
+                "AZUTON": AzutonRPA(),
+                "VIV": VivoRPA(),
+                "VIVO": VivoRPA(),
+                "OI": OiRPA(),
+                "SAT": SatRPA(),
+            }
+            
+            self.logger.info(f"RPAs registrados: {list(self.rpas_registrados.keys())}")
+            
+        except ImportError as e:
+            self.logger.warning(f"Alguns RPAs não puderam ser importados: {e}")
     
-    def finalizar_driver(self):
-        """Finaliza o driver Selenium"""
-        try:
-            if self.driver:
-                self.driver.finalizar()
-                self.driver = None
-                self.logger.info(f"Driver finalizado para {self.operadora}")
-        except Exception as e:
-            self.logger.error(f"Erro ao finalizar driver: {e}")
-    
-    def executar_processo(self, cliente_id: str, mes_ano: str, hash_execucao: str = None) -> Dict[str, Any]:
-        """Executa o processo completo de download de fatura"""
-        self.status = "EXECUTANDO"
-        resultado = {
-            "sucesso": False,
-            "mensagem": "",
-            "arquivo_baixado": None,
-            "hash_execucao": hash_execucao or str(uuid.uuid4()),
-            "detalhes": {}
-        }
+    def executar_operacao(self, operacao: TipoOperacao, parametros: ParametrosEntradaPadrao) -> ResultadoSaidaPadrao:
+        """
+        Executa operação RPA baseada no tipo e operadora
+        
+        Args:
+            operacao: Tipo de operação a ser executada
+            parametros: Parâmetros padronizados de entrada
+            
+        Returns:
+            ResultadoSaidaPadrao: Resultado da execução
+        """
+        timestamp_inicio = datetime.now()
         
         try:
-            # Buscar cliente
-            cliente = self.db.query(Cliente).filter(Cliente.id == cliente_id).first()
-            if not cliente:
-                raise Exception(f"Cliente não encontrado: {cliente_id}")
+            # Determina qual RPA usar baseado na operação
+            codigo_rpa = "SAT" if operacao == TipoOperacao.UPLOAD_SAT else parametros.operadora_codigo.upper()
             
-            # Criar ou buscar processo
-            self.processo_atual = self._criar_ou_buscar_processo(cliente, mes_ano)
+            if codigo_rpa not in self.rpas_registrados:
+                return ResultadoSaidaPadrao(
+                    sucesso=False,
+                    status=StatusExecucao.ERRO,
+                    mensagem=f"RPA não encontrado para código: {codigo_rpa}",
+                    timestamp_inicio=timestamp_inicio,
+                    timestamp_fim=datetime.now()
+                )
             
-            # Criar execução
-            self.execucao_atual = self._criar_execucao(resultado["hash_execucao"])
+            rpa = self.rpas_registrados[codigo_rpa]
             
-            self.logger.info(f"Iniciando execução para {cliente.razao_social} - {mes_ano}")
-            
-            # Inicializar driver
-            if not self.inicializar_driver():
-                raise Exception("Falha ao inicializar driver")
-            
-            # Fazer login
-            if not self.fazer_login(cliente.login_portal, cliente.senha_portal):
-                raise Exception("Falha no login")
-            
-            # Buscar faturas
-            faturas = self.buscar_faturas(cliente, mes_ano)
-            if not faturas:
-                raise Exception("Nenhuma fatura encontrada")
-            
-            # Baixar primeira fatura encontrada
-            dados_fatura = faturas[0]
-            arquivo_baixado = self.baixar_fatura(cliente, dados_fatura)
-            
-            if arquivo_baixado:
-                # Upload para S3
-                url_s3 = self.file_manager.upload_to_s3(arquivo_baixado, cliente.hash_unico, mes_ano)
-                
-                # Atualizar processo
-                self._atualizar_processo_sucesso(url_s3, dados_fatura)
-                
-                resultado.update({
-                    "sucesso": True,
-                    "mensagem": "Fatura baixada com sucesso",
-                    "arquivo_baixado": arquivo_baixado,
-                    "url_s3": url_s3,
-                    "detalhes": dados_fatura
-                })
-                
-                self.logger.info(f"Execução concluída com sucesso: {arquivo_baixado}")
+            # Executa a operação baseada no tipo
+            if operacao == TipoOperacao.DOWNLOAD_FATURA:
+                resultado = rpa.executar_download(parametros)
+            elif operacao == TipoOperacao.UPLOAD_SAT:
+                resultado = rpa.executar_upload_sat(parametros)
             else:
-                raise Exception("Falha ao baixar fatura")
-                
+                return ResultadoSaidaPadrao(
+                    sucesso=False,
+                    status=StatusExecucao.ERRO,
+                    mensagem=f"Operação não suportada: {operacao.value}",
+                    timestamp_inicio=timestamp_inicio,
+                    timestamp_fim=datetime.now()
+                )
+            
+            # Garante timestamps
+            resultado.timestamp_inicio = resultado.timestamp_inicio or timestamp_inicio
+            resultado.timestamp_fim = resultado.timestamp_fim or datetime.now()
+            
+            # Log da operação
+            rpa._log_operacao(operacao.value, parametros, resultado)
+            
+            return resultado
+            
         except Exception as e:
-            erro_msg = f"Erro na execução: {str(e)}"
-            self.logger.error(erro_msg)
-            resultado["mensagem"] = erro_msg
-            
-            if self.processo_atual:
-                self._atualizar_processo_erro(erro_msg)
-            
-        finally:
-            self.finalizar_driver()
-            self._finalizar_execucao(resultado)
-            self.status = "PARADO"
-            self.db.close()
-        
-        return resultado
-    
-    def _criar_ou_buscar_processo(self, cliente: Cliente, mes_ano: str) -> Processo:
-        """Cria ou busca processo existente"""
-        processo = self.db.query(Processo).filter(
-            Processo.cliente_id == cliente.id,
-            Processo.mes_ano == mes_ano
-        ).first()
-        
-        if not processo:
-            processo = Processo(
-                cliente_id=cliente.id,
-                mes_ano=mes_ano,
-                status_processo="AGUARDANDO_DOWNLOAD",
-                criado_automaticamente=True
+            self.logger.error(f"Erro na execução RPA: {e}")
+            return ResultadoSaidaPadrao(
+                sucesso=False,
+                status=StatusExecucao.ERRO,
+                mensagem=f"Erro interno: {str(e)}",
+                timestamp_inicio=timestamp_inicio,
+                timestamp_fim=datetime.now()
             )
-            self.db.add(processo)
-            self.db.commit()
-            self.db.refresh(processo)
+    
+    def listar_rpas_disponiveis(self) -> List[str]:
+        """
+        Lista todos os RPAs registrados no concentrador
         
-        return processo
+        Returns:
+            List[str]: Lista de códigos de RPAs disponíveis
+        """
+        return list(self.rpas_registrados.keys())
     
-    def _criar_execucao(self, hash_execucao: str) -> Execucao:
-        """Cria nova execução"""
-        execucao = Execucao(
-            processo_id=self.processo_atual.id,
-            tipo_execucao="DOWNLOAD_FATURA",
-            status_execucao="EXECUTANDO",
-            parametros_entrada={
-                "operadora": self.operadora,
-                "hash_execucao": hash_execucao
-            },
-            data_inicio=datetime.now(),
-            numero_tentativa=1
-        )
-        self.db.add(execucao)
-        self.db.commit()
-        self.db.refresh(execucao)
-        return execucao
-    
-    def _atualizar_processo_sucesso(self, url_s3: str, dados_fatura: Dict[str, Any]):
-        """Atualiza processo com sucesso"""
-        self.processo_atual.status_processo = "FATURA_BAIXADA"
-        self.processo_atual.caminho_s3_fatura = url_s3
-        self.processo_atual.url_fatura = dados_fatura.get("url_download")
+    def verificar_rpa_disponivel(self, codigo_operadora: str) -> bool:
+        """
+        Verifica se existe RPA disponível para a operadora
         
-        if dados_fatura.get("valor"):
-            self.processo_atual.valor_fatura = dados_fatura["valor"]
-        if dados_fatura.get("vencimento"):
-            self.processo_atual.data_vencimento = dados_fatura["vencimento"]
+        Args:
+            codigo_operadora: Código da operadora
             
-        self.db.commit()
-    
-    def _atualizar_processo_erro(self, erro_msg: str):
-        """Atualiza processo com erro"""
-        self.processo_atual.status_processo = "ERRO"
-        self.processo_atual.observacoes = erro_msg
-        self.db.commit()
-    
-    def _finalizar_execucao(self, resultado: Dict[str, Any]):
-        """Finaliza execução"""
-        if self.execucao_atual:
-            self.execucao_atual.status_execucao = "CONCLUIDO" if resultado["sucesso"] else "FALHOU"
-            self.execucao_atual.data_fim = datetime.now()
-            self.execucao_atual.resultado_saida = resultado
-            self.execucao_atual.mensagem_log = resultado["mensagem"]
-            
-            if not resultado["sucesso"]:
-                self.execucao_atual.detalhes_erro = {"erro": resultado["mensagem"]}
-            
-            self.db.commit()
-    
-    def obter_status(self) -> Dict[str, Any]:
-        """Retorna status atual do RPA"""
-        return {
-            "operadora": self.operadora,
-            "status": self.status,
-            "processo_atual": self.processo_atual.id if self.processo_atual else None,
-            "execucao_atual": self.execucao_atual.id if self.execucao_atual else None,
-            "driver_ativo": self.driver is not None
-        }
-    
-    def parar_execucao(self):
-        """Para a execução atual"""
-        self.status = "PARANDO"
-        if self.driver:
-            self.finalizar_driver()
-        self.status = "PARADO"
-        self.logger.info(f"Execução parada para {self.operadora}")
-    
-    def validar_cliente(self, cliente: Cliente) -> bool:
-        """Valida se o cliente possui dados necessários"""
-        if not cliente.login_portal or not cliente.senha_portal:
-            self.logger.error(f"Cliente {cliente.razao_social} sem credenciais de portal")
-            return False
-        return True
-    
-    def aguardar(self, segundos: int):
-        """Aguarda um tempo determinado"""
-        time.sleep(segundos)
-    
-    def __del__(self):
-        """Destrutor da classe"""
-        if self.db:
-            self.db.close()
+        Returns:
+            bool: True se RPA disponível, False caso contrário
+        """
+        return codigo_operadora.upper() in self.rpas_registrados
+
+# Instância global do concentrador
+concentrador_rpa = ConcentradorRPA()
