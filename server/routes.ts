@@ -208,6 +208,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Inicializar dados do CSV
+  app.post('/api/initialize-data', async (req, res) => {
+    try {
+      await storage.initializeFromCSV();
+      res.json({ message: 'Dados inicializados com sucesso' });
+    } catch (error) {
+      console.error('Error initializing data:', error);
+      res.status(500).json({ message: 'Failed to initialize data' });
+    }
+  });
+
   app.patch("/api/notificacoes/:id/marcar-lida", async (req, res) => {
     try {
       const id = parseInt(req.params.id);

@@ -273,27 +273,110 @@ export class DatabaseStorage implements IStorage {
 
   async initializeFromCSV(): Promise<void> {
     try {
+      // Inserir operadoras baseadas no CSV
       const [operadoraCount] = await db.select({ count: count() }).from(operadoras);
       
       if (operadoraCount.count === 0) {
         await db.insert(operadoras).values([
+          { nome: 'Embratel', codigo: 'EMBRATEL' },
+          { nome: 'DigitalNet', codigo: 'DIGITALNET' },
           { nome: 'Vivo', codigo: 'VIVO' },
           { nome: 'OI', codigo: 'OI' },
-          { nome: 'Embratel', codigo: 'EMBRATEL' },
           { nome: 'SAT', codigo: 'SAT' },
-          { nome: 'Azuton', codigo: 'AZUTON' },
-          { nome: 'DigitalNet', codigo: 'DIGITALNET' },
         ]);
       }
 
+      // Inserir clientes baseados no CSV
       const [clienteCount] = await db.select({ count: count() }).from(clientes);
       
       if (clienteCount.count === 0) {
-        await db.insert(clientes).values([
-          { nomeSat: 'BGTELECOM', cnpj: '12.345.678/0001-90' },
-          { nomeSat: 'Empresa Exemplo', cnpj: '98.765.432/0001-10' },
-        ]);
+        const clientesCSV = [
+          { razaoSocial: 'RICAL - RACK INDUSTRIA E COMERCIO DE ARROZ LTDA', nomeSat: 'RICAL - RACK INDUSTRIA E COMERCIO DE ARROZ LTDA', cnpj: '84.718.741/0001-00' },
+          { razaoSocial: 'ALVORADA COMERCIO DE PRODUTOS AGROPECUÁRIOS LTDA', nomeSat: 'ALVORADA COMERCIO DE PRODUTOS AGROPECUÁRIOS LTDA', cnpj: '01.963.040/0003-63' },
+          { razaoSocial: 'CENZE TRANSPORTES E COMERCIO DE COMBUSTÍVEIS', nomeSat: 'CENZE TRANSPORTES E COMERCIO DE COMBUSTÍVEIS', cnpj: '15.447.568/0002-03' },
+          { razaoSocial: 'FINANCIAL CONSTRUTORA INDUSTRIAL LTDA', nomeSat: 'FINANCIAL CONSTRUTORA INDUSTRIAL LTDA', cnpj: '15.565.179/0001-00' },
+          { razaoSocial: 'ICCAP IMPLEMENTOS RODOVIAROS LTDA', nomeSat: 'ICCAP IMPLEMENTOS RODOVIAROS LTDA', cnpj: '02.377.798/0001-10' },
+          { razaoSocial: 'LOCATELLI & TRENTIN LTDA', nomeSat: 'LOCATELLI E TRENTIN LTDA (CENTENARO PNEUS LTDA)', cnpj: '03.084.721/0001-15' },
+          { razaoSocial: 'TRANSPORTADORA KATIA LTDA', nomeSat: 'TRANSPORTADORA KATIA LTDA', cnpj: '36.810.760/0001-01' },
+          { razaoSocial: 'SANTA IZABEL TRANSPORTE REVENDEDOR RETALHISTA LTDA', nomeSat: 'TRANSPORTADORA SANTA IZABEL LTDA', cnpj: '00.411.566/0001-06' },
+          { razaoSocial: 'CG SOLURB SOLUÇÕES AMBIENTAIS SPE LTDA', nomeSat: 'CG SOLURB SOLUÇÕES AMBIENTAIS SPE LTDA', cnpj: '17.064.901/0001-40' },
+        ];
+        
+        await db.insert(clientes).values(clientesCSV);
       }
+
+      // Criar contratos baseados no CSV
+      const [contratoCount] = await db.select({ count: count() }).from(contratos);
+      
+      if (contratoCount.count === 0) {
+        const operadorasData = await this.getOperadoras();
+        const clientesData = await db.select().from(clientes);
+        
+        const contratosCSV = [
+          { hash: 'f31949d0b3615a3a', clienteId: clientesData[0].id, operadoraId: operadorasData.find(o => o.codigo === 'EMBRATEL')?.id, filtro: '00052488515-0000_25', servico: 'Fixo', tipoServico: 'Voz', status: 'ativo' },
+          { hash: '6cdc16271b11d9b7', clienteId: clientesData[0].id, operadoraId: operadorasData.find(o => o.codigo === 'EMBRATEL')?.id, filtro: '00052488515-0000_24', servico: 'Link Dedicado', tipoServico: 'Dados', status: 'ativo' },
+          { hash: '5664837335b069bc', clienteId: clientesData.find(c => c.cnpj === '00.411.566/0001-06')?.id, operadoraId: operadorasData.find(o => o.codigo === 'DIGITALNET')?.id, filtro: 'HAWJUOGYJF', servico: 'Link Dedicado', tipoServico: 'Dados', status: 'ativo' },
+          { hash: '6d93af1703a192bb', clienteId: clientesData.find(c => c.cnpj === '17.064.901/0001-40')?.id, operadoraId: operadorasData.find(o => o.codigo === 'DIGITALNET')?.id, filtro: 'JIYJRQO7JJ', servico: 'Internet', tipoServico: 'Internet', status: 'ativo' },
+        ];
+        
+        await db.insert(contratos).values(contratosCSV.filter(c => c.clienteId && c.operadoraId));
+      }
+
+      // Criar execuções de exemplo
+      const [execucaoCount] = await db.select({ count: count() }).from(execucoes);
+      
+      if (execucaoCount.count === 0) {
+        const contratosData = await db.select().from(contratos);
+        
+        if (contratosData.length > 0) {
+          const execucoesExemplo = contratosData.slice(0, 5).map((contrato, index) => ({
+            contratoId: contrato.id,
+            status: ['sucesso', 'pendente', 'erro', 'executando'][index % 4],
+            iniciadoEm: new Date(Date.now() - (index * 3600000)), // últimas horas
+            finalizadoEm: index % 4 === 1 ? null : new Date(Date.now() - (index * 3600000) + 1800000), // 30 min depois
+            tempoExecucao: index % 4 === 1 ? null : 1800, // 30 minutos em segundos
+            sessionId: `exec_${Date.now()}_${contrato.id}`,
+            erro: index === 2 ? 'Erro de autenticação no portal da operadora' : null,
+          }));
+          
+          await db.insert(execucoes).values(execucoesExemplo);
+        }
+      }
+
+      // Criar faturas de exemplo
+      const [faturaCount] = await db.select({ count: count() }).from(faturas);
+      
+      if (faturaCount.count === 0) {
+        const contratosData = await db.select().from(contratos);
+        
+        if (contratosData.length > 0) {
+          const faturasExemplo = contratosData.slice(0, 8).map((contrato, index) => ({
+            contratoId: contrato.id,
+            valor: (Math.random() * 5000 + 500).toFixed(2), // R$ 500 a R$ 5500
+            dataVencimento: new Date(Date.now() + (index * 24 * 3600000)), // próximos dias
+            statusAprovacao: ['pendente', 'aprovada', 'rejeitada'][index % 3],
+            caminhoArquivo: `/faturas/fatura_${contrato.hash}_${Date.now()}.pdf`,
+            motivoRejeicao: index % 3 === 2 ? 'Valor inconsistente com histórico' : null,
+          }));
+          
+          await db.insert(faturas).values(faturasExemplo);
+        }
+      }
+
+      // Criar notificações de exemplo
+      const [notificacaoCount] = await db.select({ count: count() }).from(notificacoes);
+      
+      if (notificacaoCount.count === 0) {
+        const notificacoesExemplo = [
+          { titulo: 'Nova fatura processada', mensagem: 'Fatura da RICAL processada com sucesso', tipo: 'info', lida: false },
+          { titulo: 'Execução com erro', mensagem: 'Falha na execução RPA para DIGITALNET', tipo: 'error', lida: false },
+          { titulo: 'Aprovação pendente', mensagem: '3 faturas aguardando aprovação', tipo: 'warning', lida: true },
+          { titulo: 'Sistema atualizado', mensagem: 'Nova versão do sistema implantada', tipo: 'success', lida: true },
+        ];
+        
+        await db.insert(notificacoes).values(notificacoesExemplo);
+      }
+
     } catch (error) {
       console.error('Error initializing from CSV:', error);
     }
