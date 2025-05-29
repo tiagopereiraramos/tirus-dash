@@ -727,6 +727,419 @@ async def upload_manual_fatura(
         "status": "pendente_aprovacao"
     }
 
+# === ENDPOINTS DE EXECUÇÃO RPA ===
+
+@app.post("/api/rpa/executar/{operadora_codigo}")
+async def executar_rpa_operadora(
+    operadora_codigo: str,
+    mes_ano: Optional[str] = None,
+    cliente_id: Optional[uuid.UUID] = None,
+    db: Session = Depends(get_db)
+):
+    """Executa RPA para uma operadora específica"""
+    try:
+        # Verificar se operadora existe e possui RPA
+        operadora = db.query(Operadora).filter(
+            Operadora.codigo == operadora_codigo.upper(),
+            Operadora.possui_rpa == True,
+            Operadora.status_ativo == True
+        ).first()
+        
+        if not operadora:
+            raise HTTPException(status_code=404, detail="Operadora não encontrada ou não possui RPA")
+        
+        # Filtrar processos para execução
+        query = db.query(Processo).join(Cliente).filter(
+            Cliente.operadora_id == operadora.id,
+            Processo.status_processo == StatusProcesso.AGUARDANDO_DOWNLOAD.value
+        )
+        
+        if mes_ano:
+            query = query.filter(Processo.mes_ano == mes_ano)
+        if cliente_id:
+            query = query.filter(Processo.cliente_id == cliente_id)
+        
+        processos = query.all()
+        
+        if not processos:
+            return {
+                "mensagem": "Nenhum processo encontrado para execução",
+                "operadora": operadora_codigo,
+                "processos_encontrados": 0
+            }
+        
+        # Criar execuções para cada processo
+        execucoes_criadas = []
+        for processo in processos:
+            execucao = Execucao(
+                processo_id=processo.id,
+                tipo_execucao=TipoExecucao.DOWNLOAD_FATURA.value,
+                status_execucao=StatusExecucao.EXECUTANDO.value,
+                parametros_entrada={
+                    "operadora_codigo": operadora_codigo,
+                    "cliente_hash": processo.cliente.hash_unico,
+                    "mes_ano": processo.mes_ano
+                },
+                mensagem_log=f"Execução RPA {operadora_codigo} iniciada"
+            )
+            db.add(execucao)
+            execucoes_criadas.append(execucao.id)
+        
+        db.commit()
+        
+        return {
+            "mensagem": f"RPA {operadora_codigo} executado com sucesso",
+            "operadora": operadora_codigo,
+            "processos_executados": len(processos),
+            "execucoes_ids": execucoes_criadas
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro na execução do RPA: {str(e)}")
+
+@app.get("/api/rpa/status")
+async def status_todos_rpas(db: Session = Depends(get_db)):
+    """Retorna status de todos os RPAs"""
+    try:
+        operadoras_rpa = db.query(Operadora).filter(
+            Operadora.possui_rpa == True,
+            Operadora.status_ativo == True
+        ).all()
+        
+        status_rpas = []
+        for operadora in operadoras_rpa:
+            # Contar execuções ativas
+            execucoes_ativas = db.query(Execucao).join(Processo).join(Cliente).filter(
+                Cliente.operadora_id == operadora.id,
+                Execucao.status_execucao == StatusExecucao.EXECUTANDO.value
+            ).count()
+            
+            # Últimas execuções
+            ultima_execucao = db.query(Execucao).join(Processo).join(Cliente).filter(
+                Cliente.operadora_id == operadora.id
+            ).order_by(Execucao.data_inicio.desc()).first()
+            
+            status_rpas.append({
+                "operadora": operadora.nome,
+                "codigo": operadora.codigo,
+                "execucoes_ativas": execucoes_ativas,
+                "ultima_execucao": ultima_execucao.data_inicio if ultima_execucao else None,
+                "status_ultima_execucao": ultima_execucao.status_execucao if ultima_execucao else None
+            })
+        
+        return {
+            "timestamp": datetime.now().isoformat(),
+            "rpas_status": status_rpas,
+            "total_operadoras_rpa": len(operadoras_rpa)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao obter status dos RPAs: {str(e)}")
+
+@app.post("/api/rpa/parar/{operadora_codigo}")
+async def parar_rpa_operadora(
+    operadora_codigo: str,
+    db: Session = Depends(get_db)
+):
+    """Para execuções ativas de uma operadora"""
+    try:
+        # Buscar execuções ativas da operadora
+        execucoes_ativas = db.query(Execucao).join(Processo).join(Cliente).join(Operadora).filter(
+            Operadora.codigo == operadora_codigo.upper(),
+            Execucao.status_execucao == StatusExecucao.EXECUTANDO.value
+        ).all()
+        
+        execucoes_paradas = 0
+        for execucao in execucoes_ativas:
+            execucao.status_execucao = StatusExecucao.FALHOU.value
+            execucao.data_fim = datetime.now()
+            execucao.mensagem_log = "Execução interrompida pelo usuário"
+            execucoes_paradas += 1
+        
+        db.commit()
+        
+        return {
+            "mensagem": f"RPA {operadora_codigo} parado com sucesso",
+            "execucoes_paradas": execucoes_paradas
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao parar RPA: {str(e)}")
+
+# === ENDPOINTS DE APROVAÇÃO ===
+
+@app.get("/api/aprovacoes/pendentes")
+async def listar_aprovacoes_pendentes(
+    skip: int = 0,
+    limit: int = 100,
+    operadora_id: Optional[uuid.UUID] = None,
+    db: Session = Depends(get_db)
+):
+    """Lista processos pendentes de aprovação"""
+    query = db.query(Processo).filter(
+        Processo.status_processo == StatusProcesso.PENDENTE_APROVACAO.value
+    )
+    
+    if operadora_id:
+        query = query.join(Cliente).filter(Cliente.operadora_id == operadora_id)
+    
+    processos = query.offset(skip).limit(limit).all()
+    return processos
+
+@app.post("/api/aprovacoes/{processo_id}/aprovar")
+async def aprovar_processo(
+    processo_id: uuid.UUID,
+    observacoes: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Aprova um processo"""
+    processo = db.query(Processo).filter(Processo.id == processo_id).first()
+    if not processo:
+        raise HTTPException(status_code=404, detail="Processo não encontrado")
+    
+    if processo.status_processo != StatusProcesso.PENDENTE_APROVACAO.value:
+        raise HTTPException(status_code=400, detail="Processo não está pendente de aprovação")
+    
+    # Atualizar processo
+    processo.status_processo = StatusProcesso.APROVADA.value
+    processo.data_aprovacao = datetime.now()
+    if observacoes:
+        processo.observacoes = observacoes
+    
+    db.commit()
+    
+    return {
+        "mensagem": "Processo aprovado com sucesso",
+        "processo_id": processo_id,
+        "status": "aprovado"
+    }
+
+@app.post("/api/aprovacoes/{processo_id}/rejeitar")
+async def rejeitar_processo(
+    processo_id: uuid.UUID,
+    motivo: str,
+    db: Session = Depends(get_db)
+):
+    """Rejeita um processo"""
+    processo = db.query(Processo).filter(Processo.id == processo_id).first()
+    if not processo:
+        raise HTTPException(status_code=404, detail="Processo não encontrado")
+    
+    if processo.status_processo != StatusProcesso.PENDENTE_APROVACAO.value:
+        raise HTTPException(status_code=400, detail="Processo não está pendente de aprovação")
+    
+    # Atualizar processo
+    processo.status_processo = StatusProcesso.REJEITADA.value
+    processo.observacoes = motivo
+    
+    db.commit()
+    
+    return {
+        "mensagem": "Processo rejeitado com sucesso",
+        "processo_id": processo_id,
+        "status": "rejeitado",
+        "motivo": motivo
+    }
+
+# === ENDPOINTS DE NOTIFICAÇÕES ===
+
+@app.get("/api/notificacoes/", response_model=List[Dict])
+async def listar_notificacoes(
+    skip: int = 0,
+    limit: int = 100,
+    tipo: Optional[TipoNotificacao] = None,
+    status: Optional[StatusEnvio] = None,
+    db: Session = Depends(get_db)
+):
+    """Lista notificações"""
+    query = db.query(Notificacao)
+    
+    if tipo:
+        query = query.filter(Notificacao.tipo_notificacao == tipo.value)
+    if status:
+        query = query.filter(Notificacao.status_envio == status.value)
+    
+    notificacoes = query.offset(skip).limit(limit).all()
+    return [
+        {
+            "id": n.id,
+            "tipo_notificacao": n.tipo_notificacao,
+            "destinatario": n.destinatario,
+            "assunto": n.assunto,
+            "mensagem": n.mensagem,
+            "status_envio": n.status_envio,
+            "tentativas_envio": n.tentativas_envio,
+            "data_envio": n.data_envio,
+            "data_criacao": n.data_criacao
+        } for n in notificacoes
+    ]
+
+@app.post("/api/notificacoes/enviar")
+async def enviar_notificacao(
+    tipo: TipoNotificacao,
+    destinatario: str,
+    assunto: str,
+    mensagem: str,
+    db: Session = Depends(get_db)
+):
+    """Envia uma notificação"""
+    notificacao = Notificacao(
+        tipo_notificacao=tipo.value,
+        destinatario=destinatario,
+        assunto=assunto,
+        mensagem=mensagem,
+        status_envio=StatusEnvio.PENDENTE.value
+    )
+    
+    db.add(notificacao)
+    db.commit()
+    
+    return {
+        "mensagem": "Notificação criada e enviada para fila",
+        "notificacao_id": notificacao.id,
+        "tipo": tipo.value
+    }
+
+# === ENDPOINTS DE AGENDAMENTOS ===
+
+@app.get("/api/agendamentos/")
+async def listar_agendamentos(
+    skip: int = 0,
+    limit: int = 100,
+    ativo: Optional[bool] = None,
+    db: Session = Depends(get_db)
+):
+    """Lista agendamentos"""
+    query = db.query(Agendamento)
+    
+    if ativo is not None:
+        query = query.filter(Agendamento.status_ativo == ativo)
+    
+    agendamentos = query.offset(skip).limit(limit).all()
+    return [
+        {
+            "id": a.id,
+            "nome_agendamento": a.nome_agendamento,
+            "descricao": a.descricao,
+            "cron_expressao": a.cron_expressao,
+            "tipo_agendamento": a.tipo_agendamento,
+            "status_ativo": a.status_ativo,
+            "proxima_execucao": a.proxima_execucao,
+            "ultima_execucao": a.ultima_execucao,
+            "data_criacao": a.data_criacao
+        } for a in agendamentos
+    ]
+
+@app.post("/api/agendamentos/")
+async def criar_agendamento(
+    nome: str,
+    descricao: str,
+    cron_expressao: str,
+    tipo_agendamento: str,
+    parametros: Optional[Dict] = None,
+    db: Session = Depends(get_db)
+):
+    """Cria um novo agendamento"""
+    agendamento = Agendamento(
+        nome_agendamento=nome,
+        descricao=descricao,
+        cron_expressao=cron_expressao,
+        tipo_agendamento=tipo_agendamento,
+        parametros_execucao=parametros or {}
+    )
+    
+    db.add(agendamento)
+    db.commit()
+    
+    return {
+        "mensagem": "Agendamento criado com sucesso",
+        "agendamento_id": agendamento.id
+    }
+
+# === ENDPOINTS DE RELATÓRIOS ===
+
+@app.get("/api/relatorios/dashboard")
+async def dashboard_principal(
+    mes_ano: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Dados para dashboard principal"""
+    mes_atual = mes_ano or datetime.now().strftime("%Y-%m")
+    
+    # Estatísticas gerais
+    total_operadoras = db.query(Operadora).filter(Operadora.status_ativo == True).count()
+    total_clientes = db.query(Cliente).filter(Cliente.status_ativo == True).count()
+    
+    # Processos do mês
+    processos_mes = db.query(Processo).filter(Processo.mes_ano == mes_atual).count()
+    
+    # Processos por status
+    processos_por_status = {}
+    for status in StatusProcesso:
+        count = db.query(Processo).filter(
+            Processo.mes_ano == mes_atual,
+            Processo.status_processo == status.value
+        ).count()
+        processos_por_status[status.value] = count
+    
+    # Execuções ativas
+    execucoes_ativas = db.query(Execucao).filter(
+        Execucao.status_execucao == StatusExecucao.EXECUTANDO.value
+    ).count()
+    
+    return {
+        "mes_referencia": mes_atual,
+        "estatisticas_gerais": {
+            "total_operadoras": total_operadoras,
+            "total_clientes": total_clientes,
+            "processos_mes": processos_mes,
+            "execucoes_ativas": execucoes_ativas
+        },
+        "processos_por_status": processos_por_status,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.get("/api/relatorios/operadoras")
+async def relatorio_operadoras(
+    mes_ano: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Relatório de processos por operadora"""
+    mes_atual = mes_ano or datetime.now().strftime("%Y-%m")
+    
+    operadoras = db.query(Operadora).filter(Operadora.status_ativo == True).all()
+    relatorio = []
+    
+    for operadora in operadoras:
+        processos_total = db.query(Processo).join(Cliente).filter(
+            Cliente.operadora_id == operadora.id,
+            Processo.mes_ano == mes_atual
+        ).count()
+        
+        processos_concluidos = db.query(Processo).join(Cliente).filter(
+            Cliente.operadora_id == operadora.id,
+            Processo.mes_ano == mes_atual,
+            Processo.status_processo.in_([
+                StatusProcesso.APROVADA.value,
+                StatusProcesso.ENVIADA_SAT.value
+            ])
+        ).count()
+        
+        relatorio.append({
+            "operadora": operadora.nome,
+            "codigo": operadora.codigo,
+            "possui_rpa": operadora.possui_rpa,
+            "processos_total": processos_total,
+            "processos_concluidos": processos_concluidos,
+            "taxa_sucesso": (processos_concluidos / processos_total * 100) if processos_total > 0 else 0
+        })
+    
+    return {
+        "mes_referencia": mes_atual,
+        "relatorio_operadoras": relatorio,
+        "timestamp": datetime.now().isoformat()
+    }
+
 if __name__ == "__main__":
     print("🚀 Iniciando Sistema de Orquestração RPA BGTELECOM...")
     uvicorn.run(
