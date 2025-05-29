@@ -15,16 +15,18 @@ from enum import Enum
 
 from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine, Column, String, Boolean, DateTime, Text, Integer, Date, DECIMAL, ForeignKey, UUID as SQLUUID, func, JSONB
+from sqlalchemy import create_engine, Column, String, Boolean, DateTime, Text, Integer, Date, DECIMAL, ForeignKey, func, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 from pydantic import BaseModel, Field
 import uvicorn
 
-# Configuração do banco
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/rpa_db")
-engine = create_engine(DATABASE_URL)
+# Configuração do banco - Usar SQLite para desenvolvimento
+DATABASE_URL = "sqlite:///./rpa_bgtelecom.db"
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+from sqlalchemy.orm import declarative_base
 Base = declarative_base()
 
 # Enums conforme manual
@@ -64,7 +66,7 @@ class Operadora(Base):
     status_ativo = Column(Boolean, default=True)
     url_portal = Column(String(500))
     instrucoes_acesso = Column(Text)
-    configuracao_rpa = Column(JSONB)
+    configuracao_rpa = Column(JSON)
     classe_rpa = Column(String(100))
     data_criacao = Column(DateTime, default=func.now())
     data_atualizacao = Column(DateTime, default=func.now(), onupdate=func.now())
@@ -127,14 +129,14 @@ class Execucao(Base):
     tipo_execucao = Column(String(50), nullable=False)
     status_execucao = Column(String(50), nullable=False)
     classe_rpa_utilizada = Column(String(100))
-    parametros_entrada = Column(JSONB)
-    resultado_saida = Column(JSONB)
+    parametros_entrada = Column(JSON)
+    resultado_saida = Column(JSON)
     data_inicio = Column(DateTime, default=func.now())
     data_fim = Column(DateTime)
     mensagem_log = Column(Text)
     url_arquivo_s3 = Column(String(500))
     numero_tentativa = Column(Integer, default=1)
-    detalhes_erro = Column(JSONB)
+    detalhes_erro = Column(JSON)
     executado_por_usuario_id = Column(SQLUUID(as_uuid=True), ForeignKey("usuarios.id"))
     ip_origem = Column(String(45))
     user_agent = Column(Text)
