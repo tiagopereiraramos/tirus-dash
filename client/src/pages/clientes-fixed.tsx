@@ -25,7 +25,7 @@ export default function Clientes() {
     );
   }
 
-  const clientesData = clientes || [];
+  const clientesData = Array.isArray(clientes) ? clientes : [];
 
   return (
     <div className="space-y-8 p-8">

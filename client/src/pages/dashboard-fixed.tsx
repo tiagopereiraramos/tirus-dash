@@ -36,10 +36,10 @@ export default function Dashboard() {
     );
   }
 
-  const metricsData = metrics?.data || {};
-  const execucoesData = execucoes?.data || [];
-  const operadorasData = operadoras?.data || [];
-  const clientesData = clientes?.data || [];
+  const metricsData = metrics || { totalOperadoras: 0, totalClientes: 0, processosPendentes: 0, execucoesAtivas: 0 };
+  const execucoesData = Array.isArray(execucoes) ? execucoes : [];
+  const operadorasData = Array.isArray(operadoras) ? operadoras : [];
+  const clientesData = Array.isArray(clientes) ? clientes : [];
 
   return (
     <div className="space-y-8 p-8">

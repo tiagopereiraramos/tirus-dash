@@ -23,7 +23,7 @@ export default function Execucoes() {
     );
   }
 
-  const execucoesData = execucoes || [];
+  const execucoesData = Array.isArray(execucoes) ? execucoes : [];
 
   return (
     <div className="space-y-8 p-8">

@@ -24,7 +24,7 @@ export default function Operadoras() {
     );
   }
 
-  const operadorasData = operadoras || [];
+  const operadorasData = Array.isArray(operadoras) ? operadoras : [];
 
   return (
     <div className="space-y-8 p-8">
