@@ -29,6 +29,28 @@ const authenticateToken = (req: any, res: any, next: any) => {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Proxy para backend Python com dados reais BGTELECOM
+  const BACKEND_URL = 'http://localhost:8000';
+  
+  // Função para fazer proxy das requisições
+  const proxyToBackend = async (path: string, method = 'GET', body?: any) => {
+    try {
+      const url = `${BACKEND_URL}${path}`;
+      const options: any = { method };
+      
+      if (body && method !== 'GET') {
+        options.headers = { 'Content-Type': 'application/json' };
+        options.body = JSON.stringify(body);
+      }
+      
+      const response = await fetch(url, options);
+      return await response.json();
+    } catch (error) {
+      console.error(`Erro proxy ${path}:`, error);
+      throw error;
+    }
+  };
+  
   // ===== ROTAS COM DADOS REAIS BGTELECOM =====
   
   // Dashboard com dados reais
