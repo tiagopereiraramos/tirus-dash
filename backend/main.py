@@ -484,5 +484,170 @@ async def dashboard_resumo(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro no resumo do dashboard: {str(e)}")
 
+# ========== APIS DE ORQUESTRAÇÃO RPA ==========
+
+@app.post("/api/executar-rpa")
+async def executar_rpa_endpoint(
+    operadora: str,
+    cliente_id: str,
+    tipo_operacao: str = "download",
+    db: Session = Depends(get_db)
+):
+    """Executa RPA para uma operadora específica"""
+    try:
+        # Busca dados do cliente
+        cliente = db.query(Cliente).filter(Cliente.id == cliente_id).first()
+        if not cliente:
+            raise HTTPException(status_code=404, detail="Cliente não encontrado")
+        
+        # Busca dados da operadora
+        operadora_obj = db.query(Operadora).filter(Operadora.codigo == operadora.upper()).first()
+        if not operadora_obj:
+            raise HTTPException(status_code=404, detail="Operadora não encontrada")
+        
+        # Verifica se operadora possui RPA
+        if not operadora_obj.possui_rpa and tipo_operacao == "download":
+            raise HTTPException(
+                status_code=400, 
+                detail="Operadora não possui RPA homologado. Use upload manual."
+            )
+        
+        # Cria processo se não existir
+        mes_atual = datetime.now().strftime("%Y-%m")
+        processo = db.query(Processo).filter(
+            Processo.cliente_id == cliente_id,
+            Processo.mes_ano == mes_atual
+        ).first()
+        
+        if not processo:
+            processo = Processo(
+                id=str(uuid.uuid4()),
+                cliente_id=cliente_id,
+                mes_ano=mes_atual,
+                status_processo=StatusProcesso.AGUARDANDO_DOWNLOAD.value,
+                criado_automaticamente=True,
+                data_criacao=datetime.now()
+            )
+            db.add(processo)
+            db.commit()
+        
+        return {
+            "sucesso": True,
+            "processo_id": processo.id,
+            "operadora": operadora,
+            "tipo_operacao": tipo_operacao,
+            "mensagem": f"RPA {operadora} iniciado com sucesso"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/aprovacoes/pendentes")
+async def listar_aprovacoes_pendentes(db: Session = Depends(get_db)):
+    """Lista faturas pendentes de aprovação"""
+    try:
+        processos = db.query(Processo).filter(
+            Processo.status_processo == StatusProcesso.PENDENTE_APROVACAO.value
+        ).join(Cliente).join(Operadora).all()
+        
+        faturas_pendentes = []
+        for processo in processos:
+            faturas_pendentes.append({
+                "processo_id": processo.id,
+                "cliente_id": processo.cliente_id,
+                "cliente_nome": processo.cliente.razao_social,
+                "operadora_nome": processo.cliente.operadora.nome,
+                "mes_ano": processo.mes_ano,
+                "url_fatura": processo.url_fatura,
+                "data_criacao": processo.data_criacao.isoformat(),
+                "observacoes": processo.observacoes
+            })
+        
+        return {
+            "faturas_pendentes": faturas_pendentes,
+            "total": len(faturas_pendentes)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/aprovacoes/{processo_id}")
+async def processar_aprovacao(
+    processo_id: str,
+    acao: str,
+    usuario_aprovador_id: str,
+    observacoes: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Processa aprovação/rejeição de fatura"""
+    try:
+        # Busca o processo
+        processo = db.query(Processo).filter(Processo.id == processo_id).first()
+        
+        if not processo:
+            raise HTTPException(status_code=404, detail="Processo não encontrado")
+        
+        # Busca o usuário aprovador
+        usuario = db.query(Usuario).filter(Usuario.id == usuario_aprovador_id).first()
+        
+        if not usuario:
+            raise HTTPException(status_code=404, detail="Usuário aprovador não encontrado")
+        
+        # Processa a ação
+        if acao == "aprovar":
+            processo.status_processo = StatusProcesso.APROVADA.value
+            processo.data_aprovacao = datetime.now()
+            mensagem = "Fatura aprovada com sucesso"
+            
+        elif acao == "rejeitar":
+            processo.status_processo = StatusProcesso.REJEITADA.value
+            processo.data_aprovacao = datetime.now()
+            mensagem = "Fatura rejeitada"
+        else:
+            raise HTTPException(status_code=400, detail="Ação inválida. Use: aprovar, rejeitar")
+        
+        # Adiciona observações
+        if observacoes:
+            timestamp = datetime.now().strftime("%d/%m/%Y %H:%M")
+            nova_observacao = f"[{timestamp}] {usuario.nome_completo}: {observacoes}"
+            processo.observacoes = nova_observacao
+        
+        processo.data_atualizacao = datetime.now()
+        db.commit()
+        
+        return {
+            "sucesso": True,
+            "processo_id": processo_id,
+            "acao": acao,
+            "status": processo.status_processo,
+            "mensagem": mensagem,
+            "aprovado_por": usuario.nome_completo
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/rpas-disponiveis")
+async def listar_rpas_disponiveis():
+    """Lista RPAs disponíveis no sistema"""
+    try:
+        # Lista operadoras com RPA disponível conforme manual
+        rpas_disponiveis = [
+            {"codigo": "EMB", "nome": "EMBRATEL", "ativo": True},
+            {"codigo": "DIG", "nome": "DIGITALNET", "ativo": True},
+            {"codigo": "AZU", "nome": "AZUTON", "ativo": True},
+            {"codigo": "VIV", "nome": "VIVO", "ativo": True},
+            {"codigo": "OI", "nome": "OI", "ativo": True},
+            {"codigo": "SAT", "nome": "SAT", "ativo": True}
+        ]
+        
+        return {
+            "rpas_disponiveis": rpas_disponiveis,
+            "total": len(rpas_disponiveis)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
