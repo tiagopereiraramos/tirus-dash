@@ -1,9 +1,16 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
+export interface WebSocketMessage {
+  type: string;
+  data: any;
+  timestamp?: number;
+}
+
 interface WebSocketContextType {
   isConnected: boolean;
-  lastMessage: string | null;
-  sendMessage: (message: string) => void;
+  lastMessage: WebSocketMessage | null;
+  sendMessage: (message: WebSocketMessage) => void;
+  subscribe: (messageType: string, handler: (data: any) => void) => () => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
@@ -15,8 +22,9 @@ interface WebSocketProviderProps {
 export function WebSocketProvider({ children }: WebSocketProviderProps) {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [lastMessage, setLastMessage] = useState<string | null>(null);
+  const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const [messageHandlers] = useState(new Map<string, Set<(data: any) => void>>());
   const maxReconnectAttempts = 5;
 
   const connect = () => {
@@ -34,7 +42,24 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
       };
 
       ws.onmessage = (event) => {
-        setLastMessage(event.data);
+        try {
+          const message: WebSocketMessage = JSON.parse(event.data);
+          setLastMessage(message);
+          
+          // Handle message subscriptions
+          const handlers = messageHandlers.get(message.type);
+          if (handlers) {
+            handlers.forEach(handler => {
+              try {
+                handler(message.data);
+              } catch (error) {
+                console.error(`Error in message handler for ${message.type}:`, error);
+              }
+            });
+          }
+        } catch (error) {
+          console.error("Error parsing WebSocket message:", error);
+        }
       };
 
       ws.onclose = () => {
@@ -63,12 +88,34 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     }
   };
 
-  const sendMessage = (message: string) => {
+  const sendMessage = (message: WebSocketMessage) => {
     if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(message);
+      const messageWithTimestamp = {
+        ...message,
+        timestamp: Date.now(),
+      };
+      socket.send(JSON.stringify(messageWithTimestamp));
     } else {
       console.warn("WebSocket is not connected");
     }
+  };
+
+  const subscribe = (messageType: string, handler: (data: any) => void): () => void => {
+    if (!messageHandlers.has(messageType)) {
+      messageHandlers.set(messageType, new Set());
+    }
+    messageHandlers.get(messageType)!.add(handler);
+
+    // Return unsubscribe function
+    return () => {
+      const handlers = messageHandlers.get(messageType);
+      if (handlers) {
+        handlers.delete(handler);
+        if (handlers.size === 0) {
+          messageHandlers.delete(messageType);
+        }
+      }
+    };
   };
 
   useEffect(() => {
@@ -86,7 +133,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     if (lastMessage) {
       const timer = setTimeout(() => {
         setLastMessage(null);
-      }, 1000);
+      }, 5000);
       
       return () => clearTimeout(timer);
     }
@@ -96,6 +143,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     isConnected,
     lastMessage,
     sendMessage,
+    subscribe,
   };
 
   return (

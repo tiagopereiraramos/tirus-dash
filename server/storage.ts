@@ -131,44 +131,21 @@ export class DatabaseStorage implements IStorage {
     const { page = 1, limit = 20, status } = params;
     const offset = (page - 1) * limit;
 
-    let query = db
-      .select({
-        id: execucoes.id,
-        sessionId: execucoes.sessionId,
-        status: execucoes.status,
-        iniciadoEm: execucoes.iniciadoEm,
-        finalizadoEm: execucoes.finalizadoEm,
-        tempoExecucao: execucoes.tempoExecucao,
-        erro: execucoes.erro,
-        contrato: {
-          id: contratos.id,
-          hash: contratos.hash,
-          servico: contratos.servico,
-          cliente: {
-            id: clientes.id,
-            nomeSat: clientes.nomeSat,
-            cnpj: clientes.cnpj,
-          },
-          operadora: {
-            id: operadoras.id,
-            nome: operadoras.nome,
-            codigo: operadoras.codigo,
-          },
-        },
-      })
+    let whereConditions = [];
+    if (status) {
+      whereConditions.push(eq(execucoes.status, status));
+    }
+
+    const data = await db
+      .select()
       .from(execucoes)
       .leftJoin(contratos, eq(execucoes.contratoId, contratos.id))
       .leftJoin(clientes, eq(contratos.clienteId, clientes.id))
       .leftJoin(operadoras, eq(contratos.operadoraId, operadoras.id))
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
       .orderBy(desc(execucoes.iniciadoEm))
       .limit(limit)
       .offset(offset);
-
-    if (status) {
-      query = query.where(eq(execucoes.status, status));
-    }
-
-    const data = await query;
 
     const [totalResult] = await db
       .select({ count: count() })
