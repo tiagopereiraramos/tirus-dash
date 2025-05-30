@@ -252,14 +252,8 @@ if __name__ == "__main__":
             traceback.print_exc()
             sys.exit(1)
         
-        # Inicializar dados
-        try:
-            with SessionLocal() as db:
-                inicializar_dados_bgtelecom(db)
-            print("✅ Dados da BGTELECOM inicializados")
-        except Exception as data_error:
-            print(f"⚠️  Aviso ao inicializar dados: {data_error}")
-            # Não parar por este erro, apenas avisar
+        # Sistema pronto - dados serão carregados conforme necessário
+        print("✅ Sistema FastAPI pronto para uso")
         
         print("🌐 Servidor FastAPI EXCLUSIVO rodando em: http://localhost:8000")
         print("📖 Documentação em: http://localhost:8000/docs")
