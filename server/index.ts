@@ -47,19 +47,36 @@ setTimeout(() => {
     }
   }));
 
-  // Servir arquivos estáticos
-  app.use(express.static(path.join(__dirname, '../client/dist')));
-  
-  // Fallback para SPA
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  // Iniciar Vite dev server
+  const viteProcess = spawn('npx', ['vite', '--host', '0.0.0.0', '--port', '5173'], {
+    cwd: path.join(process.cwd(), 'client'),
+    stdio: 'pipe'
   });
+
+  viteProcess.stdout?.on('data', (data) => {
+    const output = data.toString();
+    if (output.includes('Local:')) {
+      console.log('✅ Frontend Vite disponível em: http://localhost:5173');
+      console.log('🔗 API backend em: http://localhost:8000');
+      console.log('========================');
+    }
+    process.stdout.write(data);
+  });
+
+  viteProcess.stderr?.on('data', (data) => {
+    process.stderr.write(data);
+  });
+
+  // Proxy para Vite dev server
+  app.use('/', createProxyMiddleware({
+    target: 'http://localhost:5173',
+    changeOrigin: true,
+    ws: true
+  }));
 
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
-    console.log('✅ Frontend disponível em: http://localhost:' + PORT);
-    console.log('🔗 API backend em: http://localhost:8000');
-    console.log('========================');
+    console.log('🔗 Proxy servidor ativo em: http://localhost:' + PORT);
   });
 }, 3000);
 
