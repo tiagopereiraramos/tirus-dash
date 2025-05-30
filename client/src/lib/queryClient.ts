@@ -12,13 +12,13 @@ export async function apiRequest(
   method: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Usar SEMPRE o backend FastAPI na porta 8000
+  // Forçar SEMPRE o backend FastAPI na porta 8000
   const fullUrl = url.startsWith('http') ? url : `http://localhost:8000${url}`;
   
-  const headers: Record<string, string> = {};
-  if (data) {
-    headers["Content-Type"] = "application/json";
-  }
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
   
   // Adicionar token de autenticação se disponível
   const token = localStorage.getItem('auth_token');
@@ -29,6 +29,7 @@ export async function apiRequest(
   const res = await fetch(fullUrl, {
     method,
     headers,
+    mode: 'cors',
     body: data ? JSON.stringify(data) : undefined,
   });
 
