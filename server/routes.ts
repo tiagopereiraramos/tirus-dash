@@ -143,17 +143,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Atualizar cliente usando storage
+  // Atualizar cliente usando pgClient direto
   app.put("/api/clientes/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const updates = req.body;
+      const { nome_sat, cnpj, unidade, status_ativo } = req.body;
       
-      const updatedCliente = await storage.updateCliente(id, updates);
-      res.json(updatedCliente);
+      const result = await pgClient.query(`
+        UPDATE clientes 
+        SET nome_sat = $1, cnpj = $2, unidade = $3, status_ativo = $4, updated_at = NOW()
+        WHERE id = $5
+        RETURNING *
+      `, [nome_sat, cnpj, unidade, status_ativo, id]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ erro: "Cliente não encontrado" });
+      }
+      
+      res.json({
+        sucesso: true,
+        cliente: result.rows[0]
+      });
     } catch (error) {
       console.error('Erro ao atualizar cliente:', error);
-      res.status(500).json({ message: "Erro interno do servidor" });
+      res.status(500).json({ erro: "Erro interno do servidor" });
     }
   });
 
