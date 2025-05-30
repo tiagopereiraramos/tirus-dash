@@ -350,9 +350,9 @@ async def system_health():
 if __name__ == "__main__":
     print("Iniciando Sistema de Orquestração RPA...")
     uvicorn.run(
-        "app:app",
+        app,
         host="0.0.0.0",
         port=8000,
-        reload=True,
+        reload=False,
         log_level="info"
     )
