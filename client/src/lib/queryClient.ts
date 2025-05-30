@@ -23,6 +23,11 @@ export async function apiRequest(url: string, options: RequestInit = {}) {
 
   const finalOptions = { ...defaultOptions, ...options };
 
+  // Serializar body se existir
+  if (finalOptions.body && typeof finalOptions.body === 'object') {
+    finalOptions.body = JSON.stringify(finalOptions.body);
+  }
+
   const response = await fetch(url, finalOptions);
   
   if (!response.ok) {
