@@ -294,6 +294,175 @@ async def listar_faturas():
         {"id": 5, "cliente": "TECHCORP", "operadora": "AZUTON", "valor": 1800.00, "vencimento": "2024-12-25", "status": "aprovada"}
     ]
 
+@app.get("/api/processos")
+async def listar_processos():
+    """Lista todos os processos RPA"""
+    return [
+        {
+            "id": 1,
+            "nome": "Download Faturas EMBRATEL",
+            "operadora": "EMBRATEL",
+            "cliente_nome": "RICAL",
+            "tipo_execucao": "download",
+            "status": "executando",
+            "ultima_execucao": "2024-12-30T10:30:00",
+            "proxima_execucao": "2024-12-31T09:00:00",
+            "sucesso_rate": 95,
+            "ativo": True
+        },
+        {
+            "id": 2,
+            "nome": "Upload SAT CENZE",
+            "operadora": "DIGITALNET",
+            "cliente_nome": "CENZE",
+            "tipo_execucao": "upload_sat",
+            "status": "concluido",
+            "ultima_execucao": "2024-12-30T08:15:00",
+            "proxima_execucao": "2024-12-31T08:15:00",
+            "sucesso_rate": 88,
+            "ativo": True
+        },
+        {
+            "id": 3,
+            "nome": "Aprovação FINANCIAL",
+            "operadora": "VIVO",
+            "cliente_nome": "FINANCIAL",
+            "tipo_execucao": "aprovacao",
+            "status": "agendado",
+            "ultima_execucao": "2024-12-29T14:00:00",
+            "proxima_execucao": "2024-12-30T14:00:00",
+            "sucesso_rate": 92,
+            "ativo": True
+        },
+        {
+            "id": 4,
+            "nome": "Notificação TECHCORP",
+            "operadora": "AZUTON",
+            "cliente_nome": "TECHCORP",
+            "tipo_execucao": "notificacao",
+            "status": "erro",
+            "ultima_execucao": "2024-12-30T07:45:00",
+            "proxima_execucao": "2024-12-30T16:00:00",
+            "sucesso_rate": 75,
+            "ativo": False
+        }
+    ]
+
+@app.get("/api/processos/status")
+async def status_processos():
+    """Status em tempo real dos processos"""
+    return [
+        {
+            "id": 1,
+            "nome": "Download EMBRATEL",
+            "operadora": "EMBRATEL",
+            "status": "executando",
+            "progresso": 65,
+            "ultima_atualizacao": "2024-12-30T10:45:00"
+        },
+        {
+            "id": 2,
+            "nome": "Upload SAT CENZE",
+            "operadora": "DIGITALNET",
+            "status": "concluido",
+            "progresso": 100,
+            "ultima_atualizacao": "2024-12-30T10:30:00"
+        },
+        {
+            "id": 3,
+            "nome": "Aprovação VIVO",
+            "operadora": "VIVO",
+            "status": "agendado",
+            "progresso": 0,
+            "ultima_atualizacao": "2024-12-30T09:00:00"
+        }
+    ]
+
+@app.post("/api/processos/{processo_id}/executar")
+async def executar_processo(processo_id: int):
+    """Executa um processo específico"""
+    return {"message": f"Processo {processo_id} iniciado com sucesso", "status": "executando"}
+
+@app.get("/api/logs")
+async def listar_logs():
+    """Lista logs do sistema"""
+    return [
+        {
+            "id": 1,
+            "timestamp": "2024-12-30T10:45:23",
+            "nivel": "INFO",
+            "operadora": "EMBRATEL",
+            "processo": "Download Faturas",
+            "mensagem": "Iniciando download de faturas para cliente RICAL"
+        },
+        {
+            "id": 2,
+            "timestamp": "2024-12-30T10:44:15",
+            "nivel": "SUCCESS",
+            "operadora": "DIGITALNET",
+            "processo": "Upload SAT",
+            "mensagem": "Upload para SAT concluído com sucesso - 5 faturas processadas"
+        },
+        {
+            "id": 3,
+            "timestamp": "2024-12-30T10:43:08",
+            "nivel": "WARNING",
+            "operadora": "VIVO",
+            "processo": "Login",
+            "mensagem": "Tentativa de login falhou, realizando nova tentativa"
+        },
+        {
+            "id": 4,
+            "timestamp": "2024-12-30T10:42:01",
+            "nivel": "ERROR",
+            "operadora": "AZUTON",
+            "processo": "Download Faturas",
+            "mensagem": "Erro ao acessar portal - timeout na conexão"
+        },
+        {
+            "id": 5,
+            "timestamp": "2024-12-30T10:41:30",
+            "nivel": "INFO",
+            "operadora": "OI",
+            "processo": "Validação",
+            "mensagem": "Validando credenciais do cliente INOVATE"
+        }
+    ]
+
+@app.get("/api/metricas")
+async def obter_metricas():
+    """Métricas do sistema"""
+    return [
+        {
+            "nome": "CPU Usage",
+            "valor": 45,
+            "unidade": "%",
+            "tendencia": "stable",
+            "percentual_mudanca": 2
+        },
+        {
+            "nome": "Memory Usage",
+            "valor": 68,
+            "unidade": "%",
+            "tendencia": "up",
+            "percentual_mudanca": 5
+        },
+        {
+            "nome": "Active Processes",
+            "valor": 12,
+            "unidade": "",
+            "tendencia": "down",
+            "percentual_mudanca": -8
+        },
+        {
+            "nome": "Success Rate",
+            "valor": 94,
+            "unidade": "%",
+            "tendencia": "up",
+            "percentual_mudanca": 3
+        }
+    ]
+
 @app.get("/api/execucoes")
 async def listar_execucoes():
     """Lista todas as execuções"""

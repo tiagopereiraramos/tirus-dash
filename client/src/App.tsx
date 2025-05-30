@@ -5,7 +5,9 @@ import Layout from './components/layout/Layout';
 import Dashboard from './pages/dashboard-correto';
 import Operadoras from './pages/operadoras-funcional';
 import Clientes from './pages/clientes-moderno';
-import Faturas from './pages/faturas-correto';
+import Faturas from './pages/faturas';
+import Processos from './pages/processos';
+import Monitoramento from './pages/monitoramento';
 import Aprovacoes from './pages/aprovacoes-correto';
 import Execucoes from './pages/execucoes';
 import Upload from './pages/upload-avulso';
@@ -23,6 +25,8 @@ function App() {
             <Route path="/operadoras" element={<Operadoras />} />
             <Route path="/clientes" element={<Clientes />} />
             <Route path="/faturas" element={<Faturas />} />
+            <Route path="/processos" element={<Processos />} />
+            <Route path="/monitoramento" element={<Monitoramento />} />
             <Route path="/aprovacoes" element={<Aprovacoes />} />
             <Route path="/execucoes" element={<Execucoes />} />
             <Route path="/upload" element={<Upload />} />
