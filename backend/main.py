@@ -119,14 +119,18 @@ async def criar_operadora(request: dict):
     return nova_operadora
 
 @app.put("/api/operadoras/{operadora_id}")
-async def atualizar_operadora(operadora_id: int, update_data: OperadoraUpdate):
+async def atualizar_operadora(operadora_id: int, request: Request):
     """Atualiza uma operadora existente"""
+    # Obter dados do request
+    update_data = await request.json()
+    
     # Encontrar a operadora no estado
     for i, operadora in enumerate(operadoras_data):
         if operadora["id"] == operadora_id:
-            # Atualizar apenas os campos fornecidos
-            update_dict = update_data.dict(exclude_unset=True)
-            operadoras_data[i].update(update_dict)
+            # Atualizar campos válidos
+            for key, value in update_data.items():
+                if key in ["nome", "codigo", "tipo", "url_login", "possui_rpa", "status_ativo"]:
+                    operadoras_data[i][key] = value
             return operadoras_data[i]
     
     raise HTTPException(status_code=404, detail="Operadora não encontrada")
