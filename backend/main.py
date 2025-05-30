@@ -93,6 +93,13 @@ operadoras_data = [
     {"id": 6, "nome": "DIGITALNET", "codigo": "DN", "tipo": "INTERNET", "url_login": "https://digitalnet.com.br", "possui_rpa": True, "status_ativo": False}
 ]
 
+# Estado em memória para clientes
+clientes_data = [
+    {"id": 1, "nome": "BGTELECOM LTDA", "cnpj": "12.345.678/0001-90", "email": "contato@bgtelecom.com.br", "telefone": "(11) 3456-7890", "endereco": "Rua das Telecomunicações, 123", "cidade": "São Paulo", "estado": "SP", "cep": "01234-567", "status_ativo": True},
+    {"id": 2, "nome": "Empresa ABC S.A.", "cnpj": "98.765.432/0001-10", "email": "financeiro@empresaabc.com", "telefone": "(11) 9876-5432", "endereco": "Av. Paulista, 1000", "cidade": "São Paulo", "estado": "SP", "cep": "01310-100", "status_ativo": True},
+    {"id": 3, "nome": "TechCorp Solutions", "cnpj": "11.222.333/0001-44", "email": "admin@techcorp.com.br", "telefone": "(21) 2345-6789", "endereco": "Rua Copacabana, 500", "cidade": "Rio de Janeiro", "estado": "RJ", "cep": "22050-000", "status_ativo": False}
+]
+
 # Rotas de Operadoras
 @app.get("/api/operadoras")
 async def listar_operadoras_endpoint():
@@ -150,6 +157,71 @@ async def deletar_operadora(operadora_id: int):
 async def testar_rpa_operadora(operadora_id: int):
     """Testa a conexão RPA de uma operadora"""
     return {"message": f"Teste RPA realizado para operadora {operadora_id}", "status": "sucesso"}
+
+# Rotas de Clientes
+@app.get("/api/clientes")
+async def listar_clientes_endpoint():
+    """Lista todos os clientes"""
+    return clientes_data
+
+@app.post("/api/clientes")
+async def criar_cliente(request: Request):
+    """Cria um novo cliente"""
+    try:
+        data = await request.json()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Dados JSON inválidos: {str(e)}")
+    
+    # Gerar novo ID
+    novo_id = max([c["id"] for c in clientes_data], default=0) + 1
+    
+    novo_cliente = {
+        "id": novo_id,
+        "nome": data.get("nome", ""),
+        "cnpj": data.get("cnpj", ""),
+        "email": data.get("email", ""),
+        "telefone": data.get("telefone", ""),
+        "endereco": data.get("endereco", ""),
+        "cidade": data.get("cidade", ""),
+        "estado": data.get("estado", ""),
+        "cep": data.get("cep", ""),
+        "status_ativo": data.get("status_ativo", True)
+    }
+    
+    clientes_data.append(novo_cliente)
+    return novo_cliente
+
+@app.put("/api/clientes/{cliente_id}")
+async def atualizar_cliente(cliente_id: int, request: Request):
+    """Atualiza um cliente existente"""
+    try:
+        update_data = await request.json()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Dados JSON inválidos: {str(e)}")
+    
+    # Encontrar o cliente no estado
+    for i, cliente in enumerate(clientes_data):
+        if cliente["id"] == cliente_id:
+            # Atualizar campos válidos
+            for key, value in update_data.items():
+                if key in ["nome", "cnpj", "email", "telefone", "endereco", "cidade", "estado", "cep", "status_ativo"]:
+                    clientes_data[i][key] = value
+            return clientes_data[i]
+    
+    raise HTTPException(status_code=404, detail="Cliente não encontrado")
+
+@app.delete("/api/clientes/{cliente_id}")
+async def deletar_cliente(cliente_id: int):
+    """Remove um cliente"""
+    global clientes_data
+    
+    # Encontrar e remover o cliente
+    for i, cliente in enumerate(clientes_data):
+        if cliente["id"] == cliente_id:
+            clientes_data.pop(i)
+            return {"message": "Cliente deletado com sucesso"}
+    
+    raise HTTPException(status_code=404, detail="Cliente não encontrado")
 
 # Endpoint dashboard com dados reais do banco
 @app.get("/api/dashboard")

@@ -4,7 +4,7 @@ import { queryClient } from './lib/queryClient';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/dashboard-correto';
 import Operadoras from './pages/operadoras-funcional';
-import Clientes from './pages/clientes-funcional';
+import Clientes from './pages/clientes-moderno';
 import Faturas from './pages/faturas-correto';
 import Aprovacoes from './pages/aprovacoes-correto';
 import Execucoes from './pages/execucoes';
