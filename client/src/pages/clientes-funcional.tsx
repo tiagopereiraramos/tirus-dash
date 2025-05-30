@@ -89,7 +89,7 @@ export default function Clientes() {
   // Mutação para atualizar cliente
   const atualizarClienteMutation = useMutation({
     mutationFn: async (cliente: Cliente) => {
-      return apiRequest(`/api/clientes/${cliente.id}`, "PATCH", {
+      return apiRequest(`/api/clientes/${cliente.id}`, "PUT", {
         nome_sat: cliente.nome_sat,
         cnpj: cliente.cnpj,
         unidade: cliente.unidade,
