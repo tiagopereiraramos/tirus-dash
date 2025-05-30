@@ -46,11 +46,13 @@ export default function Execucoes() {
                 <div className="space-y-1">
                   <CardTitle className="text-lg">{execucao.nome_sat}</CardTitle>
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <span>CNPJ: {execucao.cnpj}</span>
+                    <span>Tipo: {execucao.tipo_execucao}</span>
+                    <span>•</span>
+                    <span>Tentativas: {execucao.tentativas}</span>
                   </div>
                 </div>
-                <Badge variant={execucao.status_ativo ? "default" : "secondary"}>
-                  {execucao.status_ativo ? "Ativo" : "Inativo"}
+                <Badge variant={execucao.status_execucao === "EXECUTANDO" ? "default" : execucao.status_execucao === "CONCLUIDO" ? "secondary" : "destructive"}>
+                  {execucao.status_execucao}
                 </Badge>
               </div>
             </CardHeader>
@@ -67,8 +69,10 @@ export default function Execucoes() {
                 <div className="flex items-center space-x-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <p className="text-sm font-medium">Unidade</p>
-                    <p className="text-sm text-muted-foreground">{execucao.unidade}</p>
+                    <p className="text-sm font-medium">Início</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(execucao.data_inicio).toLocaleString('pt-BR')}
+                    </p>
                   </div>
                 </div>
                 
@@ -77,13 +81,13 @@ export default function Execucoes() {
                   <div>
                     <p className="text-sm font-medium">Status</p>
                     <p className="text-sm text-muted-foreground">
-                      {execucao.status_ativo ? "Em execução" : "Parado"}
+                      {execucao.status_execucao === "EXECUTANDO" ? "Em execução" : execucao.status_execucao === "CONCLUIDO" ? "Concluído" : "Erro"}
                     </p>
                   </div>
                 </div>
                 
                 <div className="flex justify-end space-x-2">
-                  {execucao.status_ativo ? (
+                  {execucao.status_execucao === "EXECUTANDO" ? (
                     <Button variant="outline" size="sm">
                       <Square className="mr-1 h-3 w-3" />
                       Parar
@@ -91,7 +95,7 @@ export default function Execucoes() {
                   ) : (
                     <Button variant="outline" size="sm">
                       <Play className="mr-1 h-3 w-3" />
-                      Iniciar
+                      Reexecutar
                     </Button>
                   )}
                   <Button variant="outline" size="sm">

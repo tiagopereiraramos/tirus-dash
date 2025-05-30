@@ -30,10 +30,11 @@ interface Cliente {
 interface Execucao {
   id: number;
   nome_sat: string;
-  cnpj: string;
   operadora_nome: string;
-  unidade: string;
-  status_ativo: boolean;
+  tipo_execucao: string;
+  status_execucao: string;
+  data_inicio: string;
+  tentativas: number;
 }
 
 export default function Dashboard() {
