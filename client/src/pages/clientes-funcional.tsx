@@ -74,14 +74,14 @@ export default function Clientes() {
     status_ativo: true
   });
 
-  // Buscar clientes - endpoint retorna array direto
-  const { data: clientes, isLoading: loadingClientes, error: errorClientes } = useQuery<Cliente[]>({
+  // Buscar clientes - endpoint retorna objeto com propriedade clientes
+  const { data: responseClientes, isLoading: loadingClientes, error: errorClientes } = useQuery<{sucesso: boolean, clientes: Cliente[], total: number}>({
     queryKey: ["/api/clientes"],
     retry: 2
   });
 
   // Buscar operadoras para o select
-  const { data: operadoras } = useQuery<Operadora[]>({
+  const { data: responseOperadoras } = useQuery<{sucesso: boolean, operadoras: Operadora[], total: number}>({
     queryKey: ["/api/operadoras"],
     retry: 2
   });
@@ -149,8 +149,9 @@ export default function Clientes() {
     },
   });
 
-  // Filtrar clientes baseado na busca e operadora
-  const clientesFiltrados = (clientes || []).filter((cliente) => {
+  // Extrair clientes da resposta e filtrar baseado na busca e operadora
+  const clientes = responseClientes?.clientes || [];
+  const clientesFiltrados = clientes.filter((cliente) => {
     const matchBusca = !busca || 
       cliente.nome_sat.toLowerCase().includes(busca.toLowerCase()) ||
       cliente.cnpj.includes(busca) ||
@@ -275,7 +276,7 @@ export default function Clientes() {
                       <SelectValue placeholder="Selecione a operadora" />
                     </SelectTrigger>
                     <SelectContent>
-                      {(operadoras || []).map((operadora) => (
+                      {(responseOperadoras?.operadoras || []).map((operadora) => (
                         <SelectItem key={operadora.id} value={operadora.id.toString()}>
                           {operadora.nome}
                         </SelectItem>
