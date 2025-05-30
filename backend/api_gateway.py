@@ -113,10 +113,9 @@ async def criar_operadora(operadora: OperadoraCreate):
         nova_operadora = OperadoraService.criar_operadora(
             nome=operadora.nome,
             codigo=operadora.codigo,
-            tipo=operadora.tipo,
-            url_login=operadora.url_login,
             possui_rpa=operadora.possui_rpa,
-            status_ativo=operadora.status_ativo
+            url_portal=operadora.url_login,
+            instrucoes_acesso=f"Portal {operadora.nome} - Tipo: {operadora.tipo}"
         )
         return {
             "success": True,
@@ -130,9 +129,14 @@ async def criar_operadora(operadora: OperadoraCreate):
 async def atualizar_operadora(operadora_id: int, operadora: OperadoraUpdate):
     """Atualizar operadora existente"""
     try:
+        dados_atualizacao = operadora.dict(exclude_unset=True)
+        # Mapear campos do frontend para o backend
+        if 'url_login' in dados_atualizacao:
+            dados_atualizacao['url_portal'] = dados_atualizacao.pop('url_login')
+        
         operadora_atualizada = OperadoraService.atualizar_operadora(
-            operadora_id=operadora_id,
-            dados=operadora.dict(exclude_unset=True)
+            operadora_id=str(operadora_id),
+            dados_atualizacao=dados_atualizacao
         )
         return {
             "success": True,
@@ -146,7 +150,7 @@ async def atualizar_operadora(operadora_id: int, operadora: OperadoraUpdate):
 async def deletar_operadora(operadora_id: int):
     """Deletar operadora"""
     try:
-        resultado = OperadoraService.deletar_operadora(operadora_id)
+        resultado = OperadoraService.deletar_operadora(str(operadora_id))
         return {
             "success": True,
             "data": resultado,
@@ -159,7 +163,7 @@ async def deletar_operadora(operadora_id: int):
 async def testar_operadora(operadora_id: int):
     """Testar conexão RPA da operadora"""
     try:
-        resultado = OperadoraService.testar_conexao_rpa(operadora_id)
+        resultado = OperadoraService.testar_conexao_rpa(str(operadora_id))
         return {
             "success": True,
             "data": resultado,

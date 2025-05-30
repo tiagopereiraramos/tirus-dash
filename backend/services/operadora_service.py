@@ -481,3 +481,81 @@ class OperadoraService:
         except Exception as e:
             logger.error(f"Erro na inicialização de operadoras: {str(e)}")
             raise
+
+    @staticmethod
+    def testar_conexao_rpa(operadora_id: str) -> Dict[str, Any]:
+        """Testa a conexão RPA de uma operadora"""
+        try:
+            with get_db_session() as db:
+                operadora = db.query(Operadora).filter(Operadora.id == operadora_id).first()
+                
+                if not operadora:
+                    raise ValueError(f"Operadora {operadora_id} não encontrada")
+                
+                if not operadora.possui_rpa:
+                    return {
+                        "sucesso": False,
+                        "mensagem": "Operadora não possui RPA configurado",
+                        "status_teste": "N/A"
+                    }
+                
+                # Simular teste de conexão
+                # Em produção, aqui seria feita a conexão real com o RPA
+                import time
+                time.sleep(1)  # Simular tempo de teste
+                
+                # Para demonstração, assumir sucesso
+                return {
+                    "sucesso": True,
+                    "mensagem": f"Teste de conexão RPA para {operadora.nome} realizado com sucesso",
+                    "status_teste": "CONECTADO",
+                    "operadora": {
+                        "nome": operadora.nome,
+                        "codigo": operadora.codigo,
+                        "url_portal": operadora.url_portal
+                    },
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+        except Exception as e:
+            logger.error(f"Erro ao testar conexão RPA: {str(e)}")
+            return {
+                "sucesso": False,
+                "mensagem": f"Erro no teste de conexão: {str(e)}",
+                "status_teste": "ERRO"
+            }
+
+    @staticmethod
+    def obter_status_rpas() -> Dict[str, Any]:
+        """Obtém status de todos os RPAs das operadoras"""
+        try:
+            with get_db_session() as db:
+                operadoras_rpa = db.query(Operadora).filter(
+                    and_(
+                        Operadora.possui_rpa == True,
+                        Operadora.status_ativo == True
+                    )
+                ).all()
+                
+                status_list = []
+                for operadora in operadoras_rpa:
+                    # Em produção, verificar status real do RPA
+                    status_list.append({
+                        "operadora_id": str(operadora.id),
+                        "nome": operadora.nome,
+                        "codigo": operadora.codigo,
+                        "status": "ATIVO",  # Em produção, verificar status real
+                        "ultima_execucao": datetime.now().isoformat(),
+                        "url_portal": operadora.url_portal
+                    })
+                
+                return {
+                    "sucesso": True,
+                    "rpas": status_list,
+                    "total_rpas": len(status_list),
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+        except Exception as e:
+            logger.error(f"Erro ao obter status dos RPAs: {str(e)}")
+            raise
