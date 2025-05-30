@@ -37,10 +37,146 @@ const operadoraSchema = z.object({
 });
 
 export default function Operadoras() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingOperadora, setEditingOperadora] = useState<Operadora | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const { data: operadorasData, isLoading } = useQuery<Operadora[]>({
     queryKey: ["/api/operadoras"],
     retry: false,
   });
+
+  const form = useForm<z.infer<typeof operadoraSchema>>({
+    resolver: zodResolver(operadoraSchema),
+    defaultValues: {
+      nome: "",
+      codigo: "",
+      tipo: "",
+      url_login: "",
+      possui_rpa: false,
+      status_ativo: true,
+    },
+  });
+
+  // Mutations
+  const createMutation = useMutation({
+    mutationFn: (data: z.infer<typeof operadoraSchema>) =>
+      apiRequest(`/api/operadoras`, { method: "POST", body: data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/operadoras"] });
+      toast({
+        title: "Sucesso",
+        description: "Operadora criada com sucesso",
+      });
+      setDialogOpen(false);
+      form.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao criar operadora",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<z.infer<typeof operadoraSchema>> }) =>
+      apiRequest(`/api/operadoras/${id}`, { method: "PUT", body: data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/operadoras"] });
+      toast({
+        title: "Sucesso",
+        description: "Operadora atualizada com sucesso",
+      });
+      setDialogOpen(false);
+      setEditingOperadora(null);
+      form.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao atualizar operadora",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) =>
+      apiRequest(`/api/operadoras/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/operadoras"] });
+      toast({
+        title: "Sucesso",
+        description: "Operadora deletada com sucesso",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao deletar operadora",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const testMutation = useMutation({
+    mutationFn: (id: number) =>
+      apiRequest(`/api/operadoras/${id}/test`, { method: "POST" }),
+    onSuccess: (data) => {
+      toast({
+        title: "Teste Concluído",
+        description: data.message || "Teste de conexão realizado",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro no Teste",
+        description: error.message || "Erro ao testar conexão",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handlers
+  const handleCreate = () => {
+    setEditingOperadora(null);
+    form.reset();
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (operadora: Operadora) => {
+    setEditingOperadora(operadora);
+    form.reset({
+      nome: operadora.nome,
+      codigo: operadora.codigo,
+      tipo: operadora.tipo,
+      url_login: operadora.url_login,
+      possui_rpa: operadora.possui_rpa,
+      status_ativo: operadora.status_ativo,
+    });
+    setDialogOpen(true);
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm("Tem certeza que deseja deletar esta operadora?")) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  const handleTest = (id: number) => {
+    testMutation.mutate(id);
+  };
+
+  const handleSubmit = (values: z.infer<typeof operadoraSchema>) => {
+    if (editingOperadora) {
+      updateMutation.mutate({ id: editingOperadora.id, data: values });
+    } else {
+      createMutation.mutate(values);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -64,7 +200,10 @@ export default function Operadoras() {
             <h1 className="text-3xl font-bold">Operadoras</h1>
             <p className="text-blue-100 mt-2">Gerencie as operadoras de telecomunicações integradas</p>
           </div>
-          <Button className="bg-white text-blue-600 hover:bg-blue-50 font-semibold">
+          <Button 
+            onClick={handleCreate}
+            className="bg-white text-blue-600 hover:bg-blue-50 font-semibold"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Nova Operadora
           </Button>
@@ -168,16 +307,42 @@ export default function Operadoras() {
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
-                      <Button variant="outline" size="sm" className="text-blue-600 hover:text-blue-700">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-blue-600 hover:text-blue-700"
+                        onClick={() => handleEdit(operadora)}
+                      >
                         <Edit className="h-4 w-4 mr-1" />
                         Editar
                       </Button>
-                      <Button variant="outline" size="sm" className="text-green-600 hover:text-green-700">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-green-600 hover:text-green-700"
+                        onClick={() => handleTest(operadora.id)}
+                        disabled={testMutation.isPending}
+                      >
                         <Settings className="h-4 w-4 mr-1" />
-                        Testar
+                        {testMutation.isPending ? "Testando..." : "Testar"}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-red-600 hover:text-red-700"
+                        onClick={() => handleDelete(operadora.id)}
+                        disabled={deleteMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Deletar
                       </Button>
                       {operadora.url_login && (
-                        <Button variant="outline" size="sm" className="text-purple-600 hover:text-purple-700">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-purple-600 hover:text-purple-700"
+                          onClick={() => window.open(operadora.url_login, '_blank')}
+                        >
                           <ExternalLink className="h-4 w-4 mr-1" />
                           Acessar
                         </Button>
@@ -197,6 +362,151 @@ export default function Operadoras() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Dialog para criar/editar operadora */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingOperadora ? "Editar Operadora" : "Nova Operadora"}
+            </DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="nome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: VIVO" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="codigo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Código</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: VIV" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="tipo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="telecom">Telecomunicações</SelectItem>
+                        <SelectItem value="internet">Internet</SelectItem>
+                        <SelectItem value="celular">Celular</SelectItem>
+                        <SelectItem value="fixo">Telefonia Fixa</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="url_login"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>URL de Login</FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://portal.operadora.com.br" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="possui_rpa"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">RPA Disponível</FormLabel>
+                        <div className="text-sm text-muted-foreground">
+                          Possui automação configurada
+                        </div>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="status_ativo"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Status Ativo</FormLabel>
+                        <div className="text-sm text-muted-foreground">
+                          Operadora habilitada
+                        </div>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                >
+                  {createMutation.isPending || updateMutation.isPending
+                    ? "Salvando..."
+                    : editingOperadora
+                    ? "Atualizar"
+                    : "Criar"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
