@@ -49,9 +49,16 @@ export default function Aprovacoes() {
   const { toast } = useToast();
 
   // Query para buscar aprovações
-  const { data: aprovacoes = [], isLoading } = useQuery({
+  const { data: aprovacoes = [], isLoading, error } = useQuery({
     queryKey: ["/api/aprovacoes"],
+    retry: 1,
+    staleTime: 0,
   });
+
+  // Debug: log de erro se houver
+  if (error) {
+    console.error("Erro ao carregar aprovações:", error);
+  }
 
   // Filtrar aprovações por status
   const aprovacoesFiltradas = filterStatus === "all" 
