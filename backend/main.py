@@ -121,8 +121,11 @@ async def criar_operadora(request: dict):
 @app.put("/api/operadoras/{operadora_id}")
 async def atualizar_operadora(operadora_id: int, request: Request):
     """Atualiza uma operadora existente"""
-    # Obter dados do request
-    update_data = await request.json()
+    try:
+        # Obter dados do request
+        update_data = await request.json()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Dados JSON inválidos: {str(e)}")
     
     # Encontrar a operadora no estado
     for i, operadora in enumerate(operadoras_data):
