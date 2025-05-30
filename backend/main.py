@@ -501,12 +501,195 @@ async def listar_execucoes():
 
 @app.get("/api/aprovacoes")
 async def listar_aprovacoes():
-    """Lista faturas pendentes de aprovação"""
+    """Lista todas as solicitações de aprovação"""
     return [
-        {"id": 1, "cliente": "RICAL", "operadora": "EMBRATEL", "valor": 1250.00, "vencimento": "2024-12-15", "data_upload": "2024-12-01"},
-        {"id": 4, "cliente": "FINANCIAL", "operadora": "VIVO", "valor": 750.25, "vencimento": "2024-12-22", "data_upload": "2024-12-01"},
-        {"id": 6, "cliente": "TECHCORP", "operadora": "AZUTON", "valor": 950.00, "vencimento": "2024-12-28", "data_upload": "2024-12-01"}
+        {
+            "id": 1,
+            "fatura_id": 101,
+            "cliente_nome": "RICAL",
+            "operadora": "EMBRATEL",
+            "valor": 1250.00,
+            "vencimento": "2025-01-15",
+            "mes_referencia": "2024-12",
+            "status": "pendente",
+            "data_submissao": "2024-12-28T09:30:00",
+            "observacoes": "Valor acima do limite automático",
+            "aprovador": None,
+            "data_aprovacao": None
+        },
+        {
+            "id": 2,
+            "fatura_id": 102,
+            "cliente_nome": "FINANCIAL",
+            "operadora": "VIVO",
+            "valor": 750.25,
+            "vencimento": "2025-01-10",
+            "mes_referencia": "2024-12",
+            "status": "aprovada",
+            "data_submissao": "2024-12-27T15:20:00",
+            "observacoes": "Aprovação de rotina",
+            "aprovador": "João Silva",
+            "data_aprovacao": "2024-12-28T08:15:00"
+        },
+        {
+            "id": 3,
+            "fatura_id": 103,
+            "cliente_nome": "TECHCORP",
+            "operadora": "AZUTON",
+            "valor": 950.00,
+            "vencimento": "2025-01-05",
+            "mes_referencia": "2024-12",
+            "status": "pendente",
+            "data_submissao": "2024-12-29T11:45:00",
+            "observacoes": "Valor elevado - requer análise",
+            "aprovador": None,
+            "data_aprovacao": None
+        }
     ]
+
+@app.post("/api/aprovacoes/{aprovacao_id}/aprovar")
+async def aprovar_fatura(aprovacao_id: int, request: Request):
+    """Aprova uma fatura"""
+    body = await request.json()
+    return {"success": True, "message": f"Fatura {aprovacao_id} aprovada com sucesso"}
+
+@app.post("/api/aprovacoes/{aprovacao_id}/rejeitar")
+async def rejeitar_fatura(aprovacao_id: int, request: Request):
+    """Rejeita uma fatura"""
+    body = await request.json()
+    return {"success": True, "message": f"Fatura {aprovacao_id} rejeitada"}
+
+@app.get("/api/execucoes")
+async def listar_execucoes():
+    """Lista todas as execuções de processos RPA"""
+    return [
+        {
+            "id": 1,
+            "processo_nome": "Download Faturas EMBRATEL - RICAL",
+            "operadora_nome": "EMBRATEL",
+            "cliente_nome": "RICAL",
+            "tipo": "download",
+            "status": "executando",
+            "progresso": 45,
+            "inicio": "2024-12-30T08:00:00",
+            "fim": None,
+            "duracao": None,
+            "detalhes": "Processando faturas do mês atual",
+            "logs_url": "/logs/execucao_1.log",
+            "resultado": None
+        },
+        {
+            "id": 2,
+            "processo_nome": "Upload SAT - CENZE",
+            "operadora_nome": "SAT",
+            "cliente_nome": "CENZE",
+            "tipo": "upload",
+            "status": "concluido",
+            "progresso": 100,
+            "inicio": "2024-12-30T06:30:00",
+            "fim": "2024-12-30T07:15:00",
+            "duracao": "45m",
+            "detalhes": "Upload realizado com sucesso",
+            "logs_url": "/logs/execucao_2.log",
+            "resultado": {
+                "faturas_processadas": 12,
+                "arquivos_baixados": 12,
+                "erros_encontrados": 0
+            }
+        },
+        {
+            "id": 3,
+            "processo_nome": "Download Faturas VIVO - FINANCIAL",
+            "operadora_nome": "VIVO",
+            "cliente_nome": "FINANCIAL",
+            "tipo": "download",
+            "status": "erro",
+            "progresso": 25,
+            "inicio": "2024-12-30T07:00:00",
+            "fim": "2024-12-30T07:08:00",
+            "duracao": "8m",
+            "detalhes": "Falha na autenticação",
+            "logs_url": "/logs/execucao_3.log",
+            "resultado": {
+                "faturas_processadas": 0,
+                "arquivos_baixados": 0,
+                "erros_encontrados": 1
+            }
+        }
+    ]
+
+@app.post("/api/execucoes/{execucao_id}/parar")
+async def parar_execucao(execucao_id: int):
+    """Para uma execução em andamento"""
+    return {"success": True, "message": f"Execução {execucao_id} interrompida"}
+
+@app.post("/api/execucoes/{execucao_id}/reexecutar")
+async def reexecutar_processo(execucao_id: int):
+    """Reexecuta um processo"""
+    return {"success": True, "message": f"Processo da execução {execucao_id} iniciado novamente"}
+
+@app.get("/api/uploads")
+async def listar_uploads():
+    """Lista todos os uploads avulsos"""
+    return [
+        {
+            "id": 1,
+            "cliente_nome": "RICAL",
+            "operadora": "EMBRATEL", 
+            "arquivo_nome": "fatura_dezembro_2024.pdf",
+            "arquivo_tamanho": 2048576,
+            "mes_referencia": "2024-12",
+            "status": "concluido",
+            "progresso": 100,
+            "data_upload": "2024-12-28T14:30:00",
+            "observacoes": "Upload manual de fatura em atraso",
+            "resultado": {
+                "faturas_encontradas": 1,
+                "valor_total": 1250.00,
+                "erros": []
+            }
+        },
+        {
+            "id": 2,
+            "cliente_nome": "FINANCIAL",
+            "operadora": "VIVO",
+            "arquivo_nome": "faturas_novembro_2024.pdf", 
+            "arquivo_tamanho": 5242880,
+            "mes_referencia": "2024-11",
+            "status": "processando",
+            "progresso": 65,
+            "data_upload": "2024-12-29T10:15:00",
+            "observacoes": "Múltiplas faturas em um arquivo",
+            "resultado": None
+        },
+        {
+            "id": 3,
+            "cliente_nome": "TECHCORP",
+            "operadora": "AZUTON",
+            "arquivo_nome": "upload_manual_janeiro.pdf",
+            "arquivo_tamanho": 1024000,
+            "mes_referencia": "2025-01",
+            "status": "erro",
+            "progresso": 0,
+            "data_upload": "2024-12-30T09:20:00",
+            "observacoes": "Arquivo corrompido",
+            "resultado": {
+                "faturas_encontradas": 0,
+                "valor_total": 0,
+                "erros": ["Arquivo PDF corrompido ou ilegível"]
+            }
+        }
+    ]
+
+@app.post("/api/uploads")
+async def criar_upload(request: Request):
+    """Processa upload de arquivo"""
+    return {"success": True, "message": "Arquivo enviado e será processado"}
+
+@app.delete("/api/uploads/{upload_id}")
+async def deletar_upload(upload_id: int):
+    """Remove um upload"""
+    return {"success": True, "message": f"Upload {upload_id} removido"}
 
 # Endpoint de status
 @app.get("/")
