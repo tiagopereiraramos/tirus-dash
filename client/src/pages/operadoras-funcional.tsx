@@ -44,6 +44,14 @@ export default function Operadoras() {
 
   const { data: operadorasData, isLoading } = useQuery<Operadora[]>({
     queryKey: ["/api/operadoras"],
+    queryFn: async () => {
+      const response = await fetch('/api/operadoras');
+      if (!response.ok) {
+        throw new Error(`Erro ao buscar operadoras: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.data || data;
+    },
     retry: false,
   });
 
