@@ -8,8 +8,19 @@ import os
 from datetime import datetime
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional
+
+# Modelos Pydantic para operadoras
+class OperadoraUpdate(BaseModel):
+    nome: Optional[str] = None
+    codigo: Optional[str] = None
+    tipo: Optional[str] = None
+    url_login: Optional[str] = None
+    possui_rpa: Optional[bool] = None
+    status_ativo: Optional[bool] = None
 
 # Adicionar o diretório raiz ao path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -18,7 +29,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 from fastapi import Depends, HTTPException
-from typing import List, Optional
+from typing import List
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -108,20 +119,14 @@ async def criar_operadora(request: dict):
     return nova_operadora
 
 @app.put("/api/operadoras/{operadora_id}")
-async def atualizar_operadora(operadora_id: int, request: dict):
+async def atualizar_operadora(operadora_id: int, update_data: OperadoraUpdate):
     """Atualiza uma operadora existente"""
     # Encontrar a operadora no estado
     for i, operadora in enumerate(operadoras_data):
         if operadora["id"] == operadora_id:
-            # Atualizar os dados
-            operadoras_data[i].update({
-                "nome": request.get("nome", operadora["nome"]),
-                "codigo": request.get("codigo", operadora["codigo"]),
-                "tipo": request.get("tipo", operadora["tipo"]),
-                "url_login": request.get("url_login", operadora["url_login"]),
-                "possui_rpa": request.get("possui_rpa", operadora["possui_rpa"]),
-                "status_ativo": request.get("status_ativo", operadora["status_ativo"])
-            })
+            # Atualizar apenas os campos fornecidos
+            update_dict = update_data.dict(exclude_unset=True)
+            operadoras_data[i].update(update_dict)
             return operadoras_data[i]
     
     raise HTTPException(status_code=404, detail="Operadora não encontrada")
