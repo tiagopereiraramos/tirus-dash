@@ -28,7 +28,11 @@ export async function apiRequest(url: string, options: RequestInit = {}) {
     finalOptions.body = JSON.stringify(finalOptions.body);
   }
 
-  const response = await fetch(url, finalOptions);
+  // Garantir que a URL está completa para o backend
+  const baseUrl = 'http://localhost:8000';
+  const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+
+  const response = await fetch(fullUrl, finalOptions);
   
   if (!response.ok) {
     throw new Error(`API request failed: ${response.status}`);
