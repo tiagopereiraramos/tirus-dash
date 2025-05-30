@@ -43,11 +43,14 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // Usar SEMPRE o backend FastAPI na porta 8000
+    // Forçar SEMPRE o backend FastAPI na porta 8000
     const url = queryKey[0] as string;
     const fullUrl = url.startsWith('http') ? url : `http://localhost:8000${url}`;
     
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
     
     // Adicionar token de autenticação se disponível
     const token = localStorage.getItem('auth_token');
@@ -57,6 +60,7 @@ export const getQueryFn: <T>(options: {
 
     const res = await fetch(fullUrl, {
       headers,
+      mode: 'cors',
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
