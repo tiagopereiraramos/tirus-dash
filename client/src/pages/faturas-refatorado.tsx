@@ -65,8 +65,8 @@ export default function Faturas() {
   const operadoras = Array.isArray(operadorasResponse) ? operadorasResponse : [];
 
   const faturasFiltradas = faturas.filter((fatura) => {
-    const matchOperadora = !filtroOperadora || fatura.operadora === filtroOperadora;
-    const matchStatus = !filtroStatus || fatura.status === filtroStatus;
+    const matchOperadora = !filtroOperadora || filtroOperadora === "todas" || fatura.operadora === filtroOperadora;
+    const matchStatus = !filtroStatus || filtroStatus === "todos" || fatura.status === filtroStatus;
     const matchBusca = !busca || 
       fatura.cliente.toLowerCase().includes(busca.toLowerCase()) ||
       fatura.operadora.toLowerCase().includes(busca.toLowerCase());
@@ -148,7 +148,7 @@ export default function Faturas() {
                 <SelectValue placeholder="Filtrar por operadora" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as operadoras</SelectItem>
+                <SelectItem value="todas">Todas as operadoras</SelectItem>
                 {operadoras.map((operadora) => (
                   <SelectItem key={operadora.id} value={operadora.nome}>
                     {operadora.nome}
@@ -161,7 +161,7 @@ export default function Faturas() {
                 <SelectValue placeholder="Filtrar por status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
+                <SelectItem value="todos">Todos os status</SelectItem>
                 <SelectItem value="pendente">Pendente</SelectItem>
                 <SelectItem value="aprovada">Aprovada</SelectItem>
                 <SelectItem value="processando">Processando</SelectItem>
