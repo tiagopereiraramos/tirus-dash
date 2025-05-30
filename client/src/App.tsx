@@ -16,7 +16,8 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: async ({ queryKey }) => {
-        const response = await fetch(`/api${queryKey[0]}`);
+        const url = queryKey[0].toString().startsWith('/api') ? queryKey[0] : `/api${queryKey[0]}`;
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }

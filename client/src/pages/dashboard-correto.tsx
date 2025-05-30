@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, Building2, Users, FileText, CheckCircle, TrendingUp } from "lucide-react";
+import { Activity, Building2, Users, FileText, CheckCircle, TrendingUp, DollarSign, Clock } from "lucide-react";
 
 interface DashboardMetrics {
   operadoras: number;
@@ -9,6 +9,9 @@ interface DashboardMetrics {
   faturas_mes: number;
   aprovacoes_pendentes: number;
   taxa_sucesso: number;
+  execucoes_hoje: number;
+  valor_total_mes: number;
+  status: string;
 }
 
 export default function Dashboard() {
@@ -22,8 +25,8 @@ export default function Dashboard() {
       <div className="p-6">
         <div className="animate-pulse space-y-6">
           <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
               <div key={i} className="h-32 bg-gray-200 rounded"></div>
             ))}
           </div>
@@ -35,14 +38,14 @@ export default function Dashboard() {
   const cards = [
     {
       title: "Total de Operadoras",
-      value: metrics?.operadoras || 6,
+      value: metrics?.operadoras || 0,
       icon: Building2,
       color: "text-blue-600",
       bgColor: "bg-blue-50"
     },
     {
       title: "Total de Clientes", 
-      value: metrics?.clientes || 12,
+      value: metrics?.clientes || 0,
       icon: Users,
       color: "text-green-600",
       bgColor: "bg-green-50"
@@ -55,11 +58,25 @@ export default function Dashboard() {
       bgColor: "bg-orange-50"
     },
     {
+      title: "Execuções Hoje",
+      value: metrics?.execucoes_hoje || 0,
+      icon: Clock,
+      color: "text-purple-600",
+      bgColor: "bg-purple-50"
+    },
+    {
       title: "Taxa de Sucesso",
-      value: `${metrics?.taxa_sucesso || 95}%`,
+      value: `${metrics?.taxa_sucesso || 0}%`,
       icon: TrendingUp,
       color: "text-emerald-600",
       bgColor: "bg-emerald-50"
+    },
+    {
+      title: "Valor Total (Mês)",
+      value: `R$ ${metrics?.valor_total_mes?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}`,
+      icon: DollarSign,
+      color: "text-indigo-600",
+      bgColor: "bg-indigo-50"
     }
   ];
 
