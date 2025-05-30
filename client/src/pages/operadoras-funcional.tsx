@@ -219,7 +219,7 @@ export default function Operadoras() {
               <Building2 className="h-8 w-8 text-blue-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold">{operadoras?.length || 0}</p>
+                <p className="text-2xl font-bold">{(responseOperadoras?.operadoras || []).length}</p>
               </div>
             </div>
           </CardContent>
@@ -231,7 +231,7 @@ export default function Operadoras() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-muted-foreground">Ativas</p>
                 <p className="text-2xl font-bold">
-                  {(operadoras || []).filter(op => op.status_ativo).length}
+                  {(responseOperadoras?.operadoras || []).filter(op => op.status_ativo).length}
                 </p>
               </div>
             </div>
@@ -244,7 +244,7 @@ export default function Operadoras() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-muted-foreground">Com RPA</p>
                 <p className="text-2xl font-bold">
-                  {(operadoras || []).filter(op => op.possui_rpa).length}
+                  {(responseOperadoras?.operadoras || []).filter(op => op.possui_rpa).length}
                 </p>
               </div>
             </div>
