@@ -12,11 +12,11 @@ import { apiRequest } from "@/lib/queryClient";
 
 interface Fatura {
   id: number;
-  nome_sat: string;
-  operadora_nome: string;
-  mes_ano: string;
-  valor_fatura: number;
-  status_processo: string;
+  cliente: string;
+  operadora: string;
+  valor: number;
+  vencimento: string;
+  status: string;
   observacoes?: string;
 }
 
@@ -68,11 +68,11 @@ export default function Faturas() {
   const faturasData = Array.isArray(faturasResponse) ? faturasResponse : (faturasResponse?.data || []);
 
   const faturasFiltradas = faturasData.filter((fatura) => {
-    const matchOperadora = !filtroOperadora || fatura.operadora_nome === filtroOperadora;
-    const matchStatus = !filtroStatus || fatura.status_processo === filtroStatus;
+    const matchOperadora = !filtroOperadora || fatura.operadora === filtroOperadora;
+    const matchStatus = !filtroStatus || fatura.status === filtroStatus;
     const matchBusca = !busca || 
-      fatura.nome_sat.toLowerCase().includes(busca.toLowerCase()) ||
-      fatura.mes_ano.includes(busca);
+      fatura.cliente.toLowerCase().includes(busca.toLowerCase()) ||
+      fatura.operadora.toLowerCase().includes(busca.toLowerCase());
     
     return matchOperadora && matchStatus && matchBusca;
   });

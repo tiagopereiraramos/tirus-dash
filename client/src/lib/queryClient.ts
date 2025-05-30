@@ -15,19 +15,17 @@ export const queryClient = new QueryClient({
   },
 });
 
-export async function apiRequest(url: string, method: string = 'GET', data?: any) {
-  const options: RequestInit = {
-    method,
+export async function apiRequest(url: string, options: RequestInit = {}) {
+  const defaultOptions: RequestInit = {
+    method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
   };
 
-  if (data && method !== 'GET') {
-    options.body = JSON.stringify(data);
-  }
+  const finalOptions = { ...defaultOptions, ...options };
 
-  const response = await fetch(url, options);
+  const response = await fetch(url, finalOptions);
   
   if (!response.ok) {
     throw new Error(`API request failed: ${response.status}`);
