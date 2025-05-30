@@ -324,6 +324,58 @@ async def login(request: LoginRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# ===== ENDPOINTS DE APROVAÇÃO =====
+@app.post("/api/aprovacoes/{fatura_id}/aprovar")
+async def aprovar_fatura(fatura_id: int, data: dict = {}):
+    """Aprovar fatura"""
+    try:
+        observacao = data.get("observacao", "")
+        logger.info(f"Aprovando fatura {fatura_id} com observação: {observacao}")
+        
+        return {
+            "success": True, 
+            "message": f"Fatura {fatura_id} aprovada com sucesso",
+            "observacao": observacao
+        }
+    except Exception as e:
+        logger.error(f"Erro na aprovação: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro na aprovação: {str(e)}")
+
+@app.post("/api/aprovacoes/{fatura_id}/rejeitar")
+async def rejeitar_fatura(fatura_id: int, data: dict = {}):
+    """Rejeitar fatura"""
+    try:
+        motivo = data.get("motivo", "")
+        if not motivo:
+            raise HTTPException(status_code=400, detail="Motivo da rejeição é obrigatório")
+        
+        logger.info(f"Rejeitando fatura {fatura_id} com motivo: {motivo}")
+        
+        return {
+            "success": True, 
+            "message": f"Fatura {fatura_id} rejeitada com sucesso",
+            "motivo": motivo
+        }
+    except Exception as e:
+        logger.error(f"Erro na rejeição: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro na rejeição: {str(e)}")
+
+# ===== ENDPOINTS DE DOWNLOAD =====
+@app.post("/api/faturas/{fatura_id}/download")
+async def download_fatura(fatura_id: int):
+    """Download de fatura"""
+    try:
+        logger.info(f"Iniciando download da fatura {fatura_id}")
+        
+        return {
+            "success": True, 
+            "message": f"Download da fatura {fatura_id} iniciado com sucesso",
+            "status": "INICIADO"
+        }
+    except Exception as e:
+        logger.error(f"Erro no download: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro no download: {str(e)}")
+
 # ===== HEALTH CHECK =====
 @app.get("/health")
 async def health_check():

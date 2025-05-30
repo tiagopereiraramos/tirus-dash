@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/queryClient';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/dashboard-correto';
 import Operadoras from './pages/operadoras-funcional';
@@ -11,21 +12,6 @@ import Upload from './pages/upload-avulso';
 import Notificacoes from './pages/notificacoes';
 import Configuracoes from './pages/configuracoes';
 import './index.css';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      queryFn: async ({ queryKey }) => {
-        const url = queryKey[0].toString().startsWith('/api') ? queryKey[0] : `/api${queryKey[0]}`;
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      },
-    },
-  },
-});
 
 function App() {
   return (
