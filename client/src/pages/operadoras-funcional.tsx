@@ -95,30 +95,69 @@ export default function Operadoras() {
                 <TableHead>ID</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Código</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>URL Login</TableHead>
                 <TableHead>RPA</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {operadoras.length > 0 ? operadoras.map((operadora: any) => (
+              {operadoras.length > 0 ? operadoras.map((operadora) => (
                 <TableRow key={operadora.id}>
-                  <TableCell>{operadora.id}</TableCell>
-                  <TableCell>{operadora.nome}</TableCell>
-                  <TableCell>{operadora.codigo}</TableCell>
+                  <TableCell className="font-medium">{operadora.id}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <Building2 className="h-4 w-4 mr-2 text-blue-600" />
+                      <span className="font-medium">{operadora.nome}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="font-mono">
+                      {operadora.codigo}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={
+                      operadora.tipo === 'telecom' ? 'bg-blue-100 text-blue-800' :
+                      operadora.tipo === 'internet' ? 'bg-purple-100 text-purple-800' :
+                      'bg-gray-100 text-gray-800'
+                    }>
+                      {operadora.tipo}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm font-mono text-blue-600 max-w-48 truncate block">
+                      {operadora.url_login}
+                    </span>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={operadora.possui_rpa ? "default" : "secondary"}>
-                      {operadora.possui_rpa ? "Sim" : "Não"}
+                      {operadora.possui_rpa ? "✓ Sim" : "✗ Não"}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant={operadora.status_ativo ? "default" : "destructive"}>
-                      {operadora.status_ativo ? "Ativo" : "Inativo"}
+                      {operadora.status_ativo ? "🟢 Ativo" : "🔴 Inativo"}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      <Button variant="outline" size="sm">
+                        Editar
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        Testar
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               )) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">Nenhuma operadora encontrada</TableCell>
+                  <TableCell colSpan={8} className="text-center py-8">
+                    <Building2 className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-500">Nenhuma operadora encontrada</p>
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>
