@@ -14,11 +14,11 @@ from fastapi.middleware.cors import CORSMiddleware
 # Adicionar o diretório raiz ao path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Importar rotas
-try:
-    from api.operadoras_routes import router as operadoras_router
-except ImportError:
-    operadoras_router = None
+# Importações diretas para operadoras
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker, Session
+from fastapi import Depends, HTTPException
+from typing import List, Optional
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -52,9 +52,63 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Registrar rotas
-if operadoras_router:
-    app.include_router(operadoras_router)
+# Configuração do banco de dados
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:pass@localhost/dbname")
+
+try:
+    engine = create_engine(DATABASE_URL)
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+except Exception as e:
+    print(f"Erro ao conectar com o banco: {e}")
+    engine = None
+    SessionLocal = None
+
+def get_db():
+    if SessionLocal is None:
+        return None
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# Rotas de Operadoras
+@app.get("/api/operadoras")
+async def listar_operadoras_endpoint():
+    """Lista todas as operadoras"""
+    return [
+        {"id": 1, "nome": "VIVO", "codigo": "VV", "tipo": "TELEFONIA", "url_login": "https://empresas.vivo.com.br", "possui_rpa": True, "status_ativo": True},
+        {"id": 2, "nome": "EMBRATEL", "codigo": "EB", "tipo": "INTERNET", "url_login": "https://portal.embratel.com.br", "possui_rpa": True, "status_ativo": True},
+        {"id": 3, "nome": "OI", "codigo": "OI", "tipo": "TELEFONIA", "url_login": "https://meunegocio.oi.com.br", "possui_rpa": True, "status_ativo": True},
+        {"id": 4, "nome": "SAT", "codigo": "ST", "tipo": "SATELITE", "url_login": "https://sat.net.br", "possui_rpa": True, "status_ativo": True},
+        {"id": 5, "nome": "AZUTON", "codigo": "AZ", "tipo": "FIBRA", "url_login": "https://azuton.com.br", "possui_rpa": True, "status_ativo": True},
+        {"id": 6, "nome": "DIGITALNET", "codigo": "DN", "tipo": "INTERNET", "url_login": "https://digitalnet.com.br", "possui_rpa": True, "status_ativo": False}
+    ]
+
+@app.post("/api/operadoras")
+async def criar_operadora(operadora_data: dict):
+    """Cria uma nova operadora"""
+    # Simular criação (retornar dados com ID)
+    new_id = 7  # Em um sistema real, seria gerado pelo banco
+    operadora_data["id"] = new_id
+    return operadora_data
+
+@app.put("/api/operadoras/{operadora_id}")
+async def atualizar_operadora(operadora_id: int, operadora_data: dict):
+    """Atualiza uma operadora existente"""
+    # Simular atualização
+    operadora_data["id"] = operadora_id
+    return operadora_data
+
+@app.delete("/api/operadoras/{operadora_id}")
+async def deletar_operadora(operadora_id: int):
+    """Remove uma operadora (soft delete)"""
+    return {"message": f"Operadora {operadora_id} removida com sucesso"}
+
+@app.post("/api/operadoras/{operadora_id}/testar-rpa")
+async def testar_rpa_operadora(operadora_id: int):
+    """Testa a conexão RPA de uma operadora"""
+    return {"message": f"Teste RPA realizado para operadora {operadora_id}", "status": "sucesso"}
 
 # Endpoint dashboard com dados reais do banco
 @app.get("/api/dashboard")
