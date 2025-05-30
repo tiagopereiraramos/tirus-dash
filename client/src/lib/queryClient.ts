@@ -12,8 +12,8 @@ export async function apiRequest(
   method: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Usar URL relativa para funcionar com o proxy do Vite
-  const fullUrl = url.startsWith('http') ? url : url;
+  // Usar SEMPRE o backend FastAPI na porta 8000
+  const fullUrl = url.startsWith('http') ? url : `http://localhost:8000${url}`;
   
   const headers: Record<string, string> = {};
   if (data) {
@@ -42,9 +42,9 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // Usar URL relativa para funcionar com o proxy do Vite
+    // Usar SEMPRE o backend FastAPI na porta 8000
     const url = queryKey[0] as string;
-    const fullUrl = url.startsWith('http') ? url : url;
+    const fullUrl = url.startsWith('http') ? url : `http://localhost:8000${url}`;
     
     const headers: Record<string, string> = {};
     
