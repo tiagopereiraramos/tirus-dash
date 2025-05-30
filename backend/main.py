@@ -54,8 +54,98 @@ async def dashboard_independente():
         "operadoras": 6,
         "clientes": 12,
         "processos": 0,
+        "faturas_mes": 24,
+        "aprovacoes_pendentes": 3,
+        "taxa_sucesso": 95,
         "status": "online"
     }
+
+# Endpoints para as páginas
+@app.get("/api/operadoras")
+async def listar_operadoras():
+    """Lista todas as operadoras"""
+    return [
+        {"id": 1, "nome": "EMBRATEL", "codigo": "EMB", "status": "ativo", "clientes": 4},
+        {"id": 2, "nome": "DIGITALNET", "codigo": "DIG", "status": "ativo", "clientes": 2},
+        {"id": 3, "nome": "AZUTON", "codigo": "AZU", "status": "ativo", "clientes": 1},
+        {"id": 4, "nome": "VIVO", "codigo": "VIV", "status": "ativo", "clientes": 3},
+        {"id": 5, "nome": "OI", "codigo": "OI", "status": "ativo", "clientes": 1},
+        {"id": 6, "nome": "SAT", "codigo": "SAT", "status": "ativo", "clientes": 1}
+    ]
+
+@app.get("/api/clientes")
+async def listar_clientes():
+    """Lista todos os clientes"""
+    return [
+        {"id": 1, "nome": "RICAL", "cnpj": "12.345.678/0001-90", "operadora": "EMBRATEL", "status": "ativo"},
+        {"id": 2, "nome": "ALVORADA", "cnpj": "23.456.789/0001-01", "operadora": "EMBRATEL", "status": "ativo"},
+        {"id": 3, "nome": "CENZE", "cnpj": "34.567.890/0001-12", "operadora": "DIGITALNET", "status": "ativo"},
+        {"id": 4, "nome": "FINANCIAL", "cnpj": "45.678.901/0001-23", "operadora": "VIVO", "status": "ativo"},
+        {"id": 5, "nome": "TECHCORP", "cnpj": "56.789.012/0001-34", "operadora": "AZUTON", "status": "ativo"},
+        {"id": 6, "nome": "INOVATE", "cnpj": "67.890.123/0001-45", "operadora": "OI", "status": "ativo"},
+        {"id": 7, "nome": "GLOBALNET", "cnpj": "78.901.234/0001-56", "operadora": "SAT", "status": "ativo"},
+        {"id": 8, "nome": "DATACOM", "cnpj": "89.012.345/0001-67", "operadora": "EMBRATEL", "status": "ativo"},
+        {"id": 9, "nome": "CONECTA", "cnpj": "90.123.456/0001-78", "operadora": "VIVO", "status": "ativo"},
+        {"id": 10, "nome": "NETLINK", "cnpj": "01.234.567/0001-89", "operadora": "DIGITALNET", "status": "ativo"},
+        {"id": 11, "nome": "BROADBAND", "cnpj": "12.345.678/0001-91", "operadora": "VIVO", "status": "ativo"},
+        {"id": 12, "nome": "TELECOM PLUS", "cnpj": "23.456.789/0001-02", "operadora": "EMBRATEL", "status": "ativo"}
+    ]
+
+@app.get("/api/faturas")
+async def listar_faturas():
+    """Lista todas as faturas"""
+    return [
+        {"id": 1, "cliente": "RICAL", "operadora": "EMBRATEL", "valor": 1250.00, "vencimento": "2024-12-15", "status": "pendente"},
+        {"id": 2, "cliente": "ALVORADA", "operadora": "EMBRATEL", "valor": 890.50, "vencimento": "2024-12-20", "status": "aprovada"},
+        {"id": 3, "cliente": "CENZE", "operadora": "DIGITALNET", "valor": 2100.00, "vencimento": "2024-12-18", "status": "processando"},
+        {"id": 4, "cliente": "FINANCIAL", "operadora": "VIVO", "valor": 750.25, "vencimento": "2024-12-22", "status": "pendente"},
+        {"id": 5, "cliente": "TECHCORP", "operadora": "AZUTON", "valor": 1800.00, "vencimento": "2024-12-25", "status": "aprovada"}
+    ]
+
+@app.get("/api/execucoes")
+async def listar_execucoes():
+    """Lista todas as execuções"""
+    return [
+        {
+            "id": 1,
+            "processo_nome": "Download Faturas EMBRATEL",
+            "operadora_nome": "EMBRATEL",
+            "cliente_nome": "RICAL",
+            "status": "CONCLUIDO",
+            "data_inicio": "2024-12-01T10:00:00",
+            "data_fim": "2024-12-01T10:15:00",
+            "quantidade_faturas": 3
+        },
+        {
+            "id": 2,
+            "processo_nome": "Download Faturas VIVO",
+            "operadora_nome": "VIVO",
+            "cliente_nome": "FINANCIAL",
+            "status": "EXECUTANDO",
+            "data_inicio": "2024-12-01T11:00:00",
+            "data_fim": None,
+            "quantidade_faturas": 0
+        },
+        {
+            "id": 3,
+            "processo_nome": "Upload SAT",
+            "operadora_nome": "SAT",
+            "cliente_nome": "GLOBALNET",
+            "status": "ERRO",
+            "data_inicio": "2024-12-01T09:30:00",
+            "data_fim": "2024-12-01T09:45:00",
+            "quantidade_faturas": 1
+        }
+    ]
+
+@app.get("/api/aprovacoes")
+async def listar_aprovacoes():
+    """Lista faturas pendentes de aprovação"""
+    return [
+        {"id": 1, "cliente": "RICAL", "operadora": "EMBRATEL", "valor": 1250.00, "vencimento": "2024-12-15", "data_upload": "2024-12-01"},
+        {"id": 4, "cliente": "FINANCIAL", "operadora": "VIVO", "valor": 750.25, "vencimento": "2024-12-22", "data_upload": "2024-12-01"},
+        {"id": 6, "cliente": "TECHCORP", "operadora": "AZUTON", "valor": 950.00, "vencimento": "2024-12-28", "data_upload": "2024-12-01"}
+    ]
 
 # Endpoint de status
 @app.get("/")
