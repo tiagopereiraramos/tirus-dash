@@ -12,8 +12,8 @@ export async function apiRequest(
   method: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Forçar SEMPRE o backend FastAPI na porta 8000
-  const fullUrl = url.startsWith('http') ? url : `http://localhost:8000${url}`;
+  // Usar URL relativa - será redirecionada pelo servidor Express para o FastAPI
+  const fullUrl = url;
   
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -29,7 +29,6 @@ export async function apiRequest(
   const res = await fetch(fullUrl, {
     method,
     headers,
-    mode: 'cors',
     body: data ? JSON.stringify(data) : undefined,
   });
 
@@ -43,9 +42,8 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // Forçar SEMPRE o backend FastAPI na porta 8000
+    // Usar URL relativa - será redirecionada pelo servidor Express para o FastAPI
     const url = queryKey[0] as string;
-    const fullUrl = url.startsWith('http') ? url : `http://localhost:8000${url}`;
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -58,9 +56,8 @@ export const getQueryFn: <T>(options: {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const res = await fetch(fullUrl, {
+    const res = await fetch(url, {
       headers,
-      mode: 'cors',
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
