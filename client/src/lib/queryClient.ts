@@ -12,9 +12,8 @@ export async function apiRequest(
   method: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Conectar ao backend Express na porta 5000
-  const baseUrl = 'http://localhost:5000';
-  const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+  // Usar URL relativa para funcionar com o proxy do Vite
+  const fullUrl = url.startsWith('http') ? url : url;
   
   const headers: Record<string, string> = {};
   if (data) {
@@ -43,10 +42,9 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // Conectar ao backend Express na porta 5000
-    const baseUrl = 'http://localhost:5000';
+    // Usar URL relativa para funcionar com o proxy do Vite
     const url = queryKey[0] as string;
-    const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+    const fullUrl = url.startsWith('http') ? url : url;
     
     const headers: Record<string, string> = {};
     
