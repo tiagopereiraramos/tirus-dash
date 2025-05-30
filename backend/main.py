@@ -72,33 +72,30 @@ def get_db():
     finally:
         db.close()
 
+# Estado em memória para operadoras
+operadoras_data = [
+    {"id": 1, "nome": "VIVO", "codigo": "VV", "tipo": "TELEFONIA", "url_login": "https://empresas.vivo.com.br", "possui_rpa": True, "status_ativo": True},
+    {"id": 2, "nome": "EMBRATEL", "codigo": "EB", "tipo": "INTERNET", "url_login": "https://portal.embratel.com.br", "possui_rpa": True, "status_ativo": True},
+    {"id": 3, "nome": "OI", "codigo": "OI", "tipo": "TELEFONIA", "url_login": "https://meunegocio.oi.com.br", "possui_rpa": True, "status_ativo": True},
+    {"id": 4, "nome": "SAT", "codigo": "ST", "tipo": "SATELITE", "url_login": "https://sat.net.br", "possui_rpa": True, "status_ativo": True},
+    {"id": 5, "nome": "AZUTON", "codigo": "AZ", "tipo": "FIBRA", "url_login": "https://azuton.com.br", "possui_rpa": True, "status_ativo": True},
+    {"id": 6, "nome": "DIGITALNET", "codigo": "DN", "tipo": "INTERNET", "url_login": "https://digitalnet.com.br", "possui_rpa": True, "status_ativo": False}
+]
+
 # Rotas de Operadoras
 @app.get("/api/operadoras")
 async def listar_operadoras_endpoint():
     """Lista todas as operadoras"""
-    return [
-        {"id": 1, "nome": "VIVO", "codigo": "VV", "tipo": "TELEFONIA", "url_login": "https://empresas.vivo.com.br", "possui_rpa": True, "status_ativo": True},
-        {"id": 2, "nome": "EMBRATEL", "codigo": "EB", "tipo": "INTERNET", "url_login": "https://portal.embratel.com.br", "possui_rpa": True, "status_ativo": True},
-        {"id": 3, "nome": "OI", "codigo": "OI", "tipo": "TELEFONIA", "url_login": "https://meunegocio.oi.com.br", "possui_rpa": True, "status_ativo": True},
-        {"id": 4, "nome": "SAT", "codigo": "ST", "tipo": "SATELITE", "url_login": "https://sat.net.br", "possui_rpa": True, "status_ativo": True},
-        {"id": 5, "nome": "AZUTON", "codigo": "AZ", "tipo": "FIBRA", "url_login": "https://azuton.com.br", "possui_rpa": True, "status_ativo": True},
-        {"id": 6, "nome": "DIGITALNET", "codigo": "DN", "tipo": "INTERNET", "url_login": "https://digitalnet.com.br", "possui_rpa": True, "status_ativo": False}
-    ]
+    return operadoras_data
 
 @app.post("/api/operadoras")
-async def criar_operadora(operadora_data: dict):
+async def criar_operadora(request: dict):
     """Cria uma nova operadora"""
-    # Simular criação (retornar dados com ID)
-    new_id = 7  # Em um sistema real, seria gerado pelo banco
-    operadora_data["id"] = new_id
-    return operadora_data
-
-@app.put("/api/operadoras/{operadora_id}")
-async def atualizar_operadora(operadora_id: int, request: dict):
-    """Atualiza uma operadora existente"""
-    # Extrair dados do request de forma segura
-    operadora_data = {
-        "id": operadora_id,
+    # Gerar novo ID
+    new_id = max([op["id"] for op in operadoras_data]) + 1 if operadoras_data else 1
+    
+    nova_operadora = {
+        "id": new_id,
         "nome": request.get("nome", ""),
         "codigo": request.get("codigo", ""),
         "tipo": request.get("tipo", ""),
@@ -106,11 +103,35 @@ async def atualizar_operadora(operadora_id: int, request: dict):
         "possui_rpa": request.get("possui_rpa", False),
         "status_ativo": request.get("status_ativo", True)
     }
-    return operadora_data
+    
+    operadoras_data.append(nova_operadora)
+    return nova_operadora
+
+@app.put("/api/operadoras/{operadora_id}")
+async def atualizar_operadora(operadora_id: int, request: dict):
+    """Atualiza uma operadora existente"""
+    # Encontrar a operadora no estado
+    for i, operadora in enumerate(operadoras_data):
+        if operadora["id"] == operadora_id:
+            # Atualizar os dados
+            operadoras_data[i].update({
+                "nome": request.get("nome", operadora["nome"]),
+                "codigo": request.get("codigo", operadora["codigo"]),
+                "tipo": request.get("tipo", operadora["tipo"]),
+                "url_login": request.get("url_login", operadora["url_login"]),
+                "possui_rpa": request.get("possui_rpa", operadora["possui_rpa"]),
+                "status_ativo": request.get("status_ativo", operadora["status_ativo"])
+            })
+            return operadoras_data[i]
+    
+    raise HTTPException(status_code=404, detail="Operadora não encontrada")
 
 @app.delete("/api/operadoras/{operadora_id}")
 async def deletar_operadora(operadora_id: int):
-    """Remove uma operadora (soft delete)"""
+    """Remove uma operadora"""
+    global operadoras_data
+    # Filtrar para remover a operadora
+    operadoras_data = [op for op in operadoras_data if op["id"] != operadora_id]
     return {"message": f"Operadora {operadora_id} removida com sucesso"}
 
 @app.post("/api/operadoras/{operadora_id}/testar-rpa")
