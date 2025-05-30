@@ -143,6 +143,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Atualizar cliente usando storage
+  app.put("/api/clientes/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const updatedCliente = await storage.updateCliente(id, updates);
+      res.json(updatedCliente);
+    } catch (error) {
+      console.error('Erro ao atualizar cliente:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   // Faturas/Processos com dados reais
   app.get("/api/faturas", async (req, res) => {
     try {
