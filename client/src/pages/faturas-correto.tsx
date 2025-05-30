@@ -49,7 +49,7 @@ export default function Faturas() {
   });
 
   const downloadMutation = useMutation({
-    mutationFn: (faturaId: number) => apiRequest(`/api/faturas/${faturaId}/download`, "POST"),
+    mutationFn: (faturaId: number) => apiRequest(`/api/faturas/${faturaId}/download`, { method: "POST" }),
     onSuccess: () => {
       toast({
         title: "Download iniciado",
