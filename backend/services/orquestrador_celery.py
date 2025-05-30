@@ -244,7 +244,9 @@ def processar_operadora_completa(self, operadora_codigo: str, mes_ano: str = Non
     
     try:
         from ..models.database import get_db_session
-        from ..models.processo import Operadora, Cliente, Processo, StatusProcesso
+        from ..models.processo import Processo, StatusProcesso
+        from ..models.cliente import Cliente
+        from ..models.operadora import Operadora
         
         mes_atual = mes_ano or datetime.now().strftime("%Y-%m")
         processos_executados = 0
