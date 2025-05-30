@@ -115,7 +115,9 @@ export default function Operadoras() {
     mutationFn: (id: number) =>
       apiRequest(`/api/operadoras/${id}`, { method: "DELETE" }),
     onSuccess: () => {
+      // Invalidar cache e recarregar dados
       queryClient.invalidateQueries({ queryKey: ["/api/operadoras"] });
+      queryClient.refetchQueries({ queryKey: ["/api/operadoras"] });
       toast({
         title: "Sucesso",
         description: "Operadora deletada com sucesso",

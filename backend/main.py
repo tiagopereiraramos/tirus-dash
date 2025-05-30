@@ -94,10 +94,18 @@ async def criar_operadora(operadora_data: dict):
     return operadora_data
 
 @app.put("/api/operadoras/{operadora_id}")
-async def atualizar_operadora(operadora_id: int, operadora_data: dict):
+async def atualizar_operadora(operadora_id: int, request: dict):
     """Atualiza uma operadora existente"""
-    # Simular atualização
-    operadora_data["id"] = operadora_id
+    # Extrair dados do request de forma segura
+    operadora_data = {
+        "id": operadora_id,
+        "nome": request.get("nome", ""),
+        "codigo": request.get("codigo", ""),
+        "tipo": request.get("tipo", ""),
+        "url_login": request.get("url_login", ""),
+        "possui_rpa": request.get("possui_rpa", False),
+        "status_ativo": request.get("status_ativo", True)
+    }
     return operadora_data
 
 @app.delete("/api/operadoras/{operadora_id}")
