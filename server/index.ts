@@ -1,26 +1,44 @@
 #!/usr/bin/env node
 /**
- * Sistema RPA BGTELECOM - Apenas Vite Frontend
+ * Sistema RPA BGTELECOM - Sistema Simples
  */
 
 import { spawn } from 'child_process';
 import path from 'path';
 
-console.log('🚀 SISTEMA RPA BGTELECOM - FRONTEND');
-console.log('====================================');
+console.log('🚀 SISTEMA RPA BGTELECOM');
+console.log('========================');
 
-// Iniciar apenas o Vite frontend com proxy para FastAPI
-const viteProcess = spawn('npx', ['vite', '--host', '0.0.0.0', '--port', '5000'], {
-  cwd: path.join(process.cwd(), 'client'),
-  stdio: 'inherit'
+// Iniciar FastAPI primeiro
+const backendProcess = spawn('python', ['-m', 'uvicorn', 'main:app', '--host', '0.0.0.0', '--port', '8000'], {
+  cwd: path.join(process.cwd(), 'backend'),
+  stdio: 'pipe'
 });
 
-viteProcess.on('error', (error) => {
-  console.error('❌ Erro ao iniciar Vite:', error);
-  process.exit(1);
+// Log do backend
+backendProcess.stdout?.on('data', (data) => {
+  console.log(`[BACKEND] ${data.toString().trim()}`);
 });
 
-viteProcess.on('close', (code) => {
-  console.log(`🔴 Vite finalizado com código ${code}`);
-  process.exit(code || 0);
+backendProcess.stderr?.on('data', (data) => {
+  console.log(`[BACKEND] ${data.toString().trim()}`);
 });
+
+// Aguardar 3 segundos e iniciar frontend
+setTimeout(() => {
+  console.log('🌐 Iniciando frontend...');
+  
+  const frontendProcess = spawn('npx', ['vite', '--host', '0.0.0.0', '--port', '5000'], {
+    cwd: path.join(process.cwd(), 'client'),
+    stdio: 'pipe'
+  });
+
+  frontendProcess.stdout?.on('data', (data) => {
+    console.log(`[FRONTEND] ${data.toString().trim()}`);
+  });
+
+  frontendProcess.stderr?.on('data', (data) => {
+    console.log(`[FRONTEND] ${data.toString().trim()}`);
+  });
+
+}, 3000);
