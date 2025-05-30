@@ -7,7 +7,7 @@ from sqlalchemy import Column, String, DateTime, Boolean, Text, ForeignKey, Nume
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
-from backend.config.database import Base
+from config.database import Base
 
 class Processo(Base):
     """
