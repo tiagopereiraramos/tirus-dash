@@ -12,10 +12,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 
 from ..models.database import get_db_session
-from ..models.processo import (
-    Processo, Cliente, Operadora, Execucao, 
-    StatusProcesso, StatusExecucao, TipoExecucao
-)
+from ..models.processo import Processo, StatusProcesso
+from ..models.cliente import Cliente
+from ..models.operadora import Operadora
+from ..models.execucao import Execucao, StatusExecucao, TipoExecucao
 
 logger = logging.getLogger(__name__)
 
