@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Building2 } from "lucide-react";
+import { Plus, Building2, Edit, Trash2, Settings, ExternalLink } from "lucide-react";
 
 interface Operadora {
   id: number;
@@ -36,59 +36,64 @@ export default function Operadoras() {
   const operadoras = operadorasData || [];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center border-b border-gray-200 pb-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Operadoras</h1>
-          <p className="text-gray-600 mt-2">Gerencie as operadoras de telecomunicações integradas</p>
+    <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
+      {/* Header com gradiente azul */}
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Operadoras</h1>
+            <p className="text-blue-100 mt-2">Gerencie as operadoras de telecomunicações integradas</p>
+          </div>
+          <Button className="bg-white text-blue-600 hover:bg-blue-50 font-semibold">
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Operadora
+          </Button>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Operadora
-        </Button>
       </div>
 
+      {/* Cards de estatísticas com gradientes */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{operadoras.length}</div>
-            <div className="text-sm text-gray-600">Total</div>
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600">
+          <CardContent className="p-6 text-center">
+            <div className="text-3xl font-bold text-white">{operadoras.length}</div>
+            <div className="text-sm text-blue-100 mt-1">Total de Operadoras</div>
           </CardContent>
         </Card>
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-green-500 to-green-600">
+          <CardContent className="p-6 text-center">
+            <div className="text-3xl font-bold text-white">
               {operadoras.filter(op => op.status_ativo).length}
             </div>
-            <div className="text-sm text-gray-600">Ativas</div>
+            <div className="text-sm text-green-100 mt-1">Operadoras Ativas</div>
           </CardContent>
         </Card>
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-500 to-purple-600">
+          <CardContent className="p-6 text-center">
+            <div className="text-3xl font-bold text-white">
               {operadoras.filter(op => op.possui_rpa).length}
             </div>
-            <div className="text-sm text-gray-600">Com RPA</div>
+            <div className="text-sm text-purple-100 mt-1">Com RPA Integrado</div>
           </CardContent>
         </Card>
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-orange-600">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-500 to-orange-600">
+          <CardContent className="p-6 text-center">
+            <div className="text-3xl font-bold text-white">
               {operadoras.filter(op => op.tipo === 'telecom').length}
             </div>
-            <div className="text-sm text-gray-600">Telecom</div>
+            <div className="text-sm text-orange-100 mt-1">Telecomunicações</div>
           </CardContent>
         </Card>
       </div>
       
-      <Card className="border-0 shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center">
+      {/* Tabela de operadoras com design moderno */}
+      <Card className="border-0 shadow-lg bg-white">
+        <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-t-lg">
+          <CardTitle className="flex items-center text-slate-800">
             <Building2 className="h-5 w-5 mr-2 text-blue-600" />
             Lista de Operadoras ({operadoras.length})
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
@@ -143,12 +148,20 @@ export default function Operadoras() {
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" className="text-blue-600 hover:text-blue-700">
+                        <Edit className="h-4 w-4 mr-1" />
                         Editar
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" className="text-green-600 hover:text-green-700">
+                        <Settings className="h-4 w-4 mr-1" />
                         Testar
                       </Button>
+                      {operadora.url_login && (
+                        <Button variant="outline" size="sm" className="text-purple-600 hover:text-purple-700">
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          Acessar
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
