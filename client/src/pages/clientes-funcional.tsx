@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function Clientes() {
   const { data: clientesData, isLoading } = useQuery({
-    queryKey: ["/clientes"],
+    queryKey: ["/api/clientes"],
     retry: false,
   });
 
@@ -13,7 +13,7 @@ export default function Clientes() {
     return <div className="p-6">Carregando clientes...</div>;
   }
 
-  const clientes = clientesData?.clientes || [];
+  const clientes = clientesData || [];
 
   return (
     <div className="p-6 space-y-6">

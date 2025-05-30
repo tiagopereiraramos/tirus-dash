@@ -71,17 +71,17 @@ export default function Faturas() {
 
   // Buscar faturas do FastAPI
   const { data: responseFaturas, isLoading: loadingFaturas, error: errorFaturas } = useQuery({
-    queryKey: ["/api/processos"],
+    queryKey: ["/api/faturas"],
     retry: false,
   });
 
   // Mutation para aprovar fatura
   const mutationAprovar = useMutation({
     mutationFn: async ({ faturaId, observacoes }: { faturaId: string; observacoes?: string }) => {
-      return await apiRequest(`/api/processos/${faturaId}/aprovar`, "PUT", { observacoes });
+      return await apiRequest(`/api/faturas/${faturaId}/aprovar`, "PATCH", { observacoes });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/processos"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/faturas"] });
       setDialogDetalheAberto(false);
       setObservacoesAprovacao("");
       toast({
@@ -101,10 +101,10 @@ export default function Faturas() {
   // Mutation para rejeitar fatura
   const mutationRejeitar = useMutation({
     mutationFn: async ({ faturaId, motivo }: { faturaId: string; motivo: string }) => {
-      return await apiRequest(`/api/processos/${faturaId}/rejeitar`, "PUT", { motivo });
+      return await apiRequest(`/api/faturas/${faturaId}/rejeitar`, "PATCH", { motivo });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/processos"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/faturas"] });
       setDialogDetalheAberto(false);
       toast({
         title: "Fatura rejeitada",
@@ -140,7 +140,7 @@ export default function Faturas() {
     );
   }
 
-  const faturas = responseFaturas?.processos || [];
+  const faturas = responseFaturas || [];
 
   // Filtrar faturas
   const faturasFiltradas = faturas.filter((fatura: Fatura) => {

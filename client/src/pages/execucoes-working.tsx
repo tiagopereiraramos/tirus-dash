@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 export default function Execucoes() {
   const { data: execucoes, isLoading } = useQuery({
-    queryKey: ["/execucoes"],
+    queryKey: ["/api/execucoes"],
     retry: false,
   });
 
