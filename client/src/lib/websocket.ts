@@ -1,3 +1,5 @@
+import React, { createContext, useContext, useEffect, ReactNode } from 'react';
+
 // WebSocket client for real-time updates
 export class WebSocketClient {
   private ws: WebSocket | null = null;
@@ -48,3 +50,34 @@ export class WebSocketClient {
 }
 
 export const wsClient = new WebSocketClient();
+
+// WebSocket Context
+const WebSocketContext = createContext<WebSocketClient | null>(null);
+
+export function useWebSocket() {
+  const context = useContext(WebSocketContext);
+  if (!context) {
+    throw new Error('useWebSocket must be used within a WebSocketProvider');
+  }
+  return context;
+}
+
+interface WebSocketProviderProps {
+  children: ReactNode;
+}
+
+export function WebSocketProvider({ children }: WebSocketProviderProps) {
+  useEffect(() => {
+    wsClient.connect();
+    
+    return () => {
+      wsClient.disconnect();
+    };
+  }, []);
+
+  return (
+    <WebSocketContext.Provider value={wsClient}>
+      {children}
+    </WebSocketContext.Provider>
+  );
+}
