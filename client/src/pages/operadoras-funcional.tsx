@@ -72,7 +72,7 @@ export default function Operadoras() {
   });
 
   // Filtrar operadoras baseado na busca
-  const operadorasFiltradas = (operadoras || []).filter((operadora) =>
+  const operadorasFiltradas = (responseOperadoras?.operadoras || []).filter((operadora) =>
     !busca || 
     operadora.nome.toLowerCase().includes(busca.toLowerCase()) ||
     operadora.codigo.toLowerCase().includes(busca.toLowerCase())
