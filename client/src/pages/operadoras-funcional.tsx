@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Building2, Edit, Trash2, Settings, ExternalLink } from "lucide-react";
+import { Plus, Building2, Edit, Trash2, Settings, ExternalLink, CheckCircle, XCircle } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -304,13 +304,27 @@ export default function Operadoras() {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={operadora.possui_rpa ? "default" : "secondary"}>
-                      {operadora.possui_rpa ? "✓ Sim" : "✗ Não"}
+                    <Badge variant={operadora.possui_rpa ? "default" : "secondary"} className="flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" />
+                      {operadora.possui_rpa ? "Sim" : "Não"}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={operadora.status_ativo ? "default" : "destructive"}>
-                      {operadora.status_ativo ? "🟢 Ativo" : "🔴 Inativo"}
+                    <Badge 
+                      variant={operadora.status_ativo ? "default" : "destructive"} 
+                      className="flex items-center gap-1"
+                    >
+                      {operadora.status_ativo ? (
+                        <>
+                          <CheckCircle className="h-3 w-3 text-green-600" />
+                          Ativo
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="h-3 w-3 text-red-600" />
+                          Inativo
+                        </>
+                      )}
                     </Badge>
                   </TableCell>
                   <TableCell>
