@@ -14,6 +14,12 @@ from fastapi.middleware.cors import CORSMiddleware
 # Adicionar o diretório raiz ao path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Importar rotas
+try:
+    from api.operadoras_routes import router as operadoras_router
+except ImportError:
+    operadoras_router = None
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Gerencia o ciclo de vida da aplicação"""
@@ -45,6 +51,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Registrar rotas
+if operadoras_router:
+    app.include_router(operadoras_router)
 
 # Endpoint dashboard com dados reais do banco
 @app.get("/api/dashboard")
