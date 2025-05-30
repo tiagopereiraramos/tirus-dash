@@ -1,21 +1,25 @@
 """
-Modelos do sistema
+Inicialização dos modelos SQLAlchemy
+Importa todos os modelos para resolver dependências circulares
 """
 
+from config.database import Base
+
+# Importar todos os modelos para resolver relacionamentos
 from .operadora import Operadora
-from .cliente import Cliente  
+from .usuario import Usuario  
+from .cliente import Cliente
 from .processo import Processo
 from .execucao import Execucao
-from .usuario import Usuario
-from .notificacao import Notificacao
-from .agendamento import Agendamento
+from .fatura import Fatura
 
+# Exportar modelos
 __all__ = [
-    "Operadora",
-    "Cliente", 
-    "Processo",
-    "Execucao",
+    "Base",
+    "Operadora", 
     "Usuario",
-    "Notificacao",
-    "Agendamento"
+    "Cliente",
+    "Processo", 
+    "Execucao",
+    "Fatura"
 ]

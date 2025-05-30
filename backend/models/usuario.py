@@ -6,7 +6,7 @@ Conforme especificação do manual da BGTELECOM
 from sqlalchemy import Column, String, DateTime, Boolean, Text
 from datetime import datetime
 
-from ..config.database import Base
+from config.database import Base
 
 class Usuario(Base):
     """

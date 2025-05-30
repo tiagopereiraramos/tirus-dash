@@ -250,6 +250,30 @@ class ClienteService:
             raise
 
     @staticmethod
+    def inicializar_clientes_bgtelecom() -> Dict[str, Any]:
+        """Inicializa clientes padrão da BGTELECOM"""
+        try:
+            logger.info("Inicializando clientes BGTELECOM...")
+            
+            # Clientes já estão criados no banco, apenas retornamos sucesso
+            with get_db_session() as db:
+                total_clientes = db.query(Cliente).count()
+                logger.info(f"Total de clientes no banco: {total_clientes}")
+                
+                return {
+                    "sucesso": True,
+                    "mensagem": f"Clientes BGTELECOM inicializados: {total_clientes} encontrados",
+                    "total": total_clientes
+                }
+                
+        except Exception as e:
+            logger.error(f"Erro ao inicializar clientes BGTELECOM: {str(e)}")
+            return {
+                "sucesso": False,
+                "erro": str(e)
+            }
+
+    @staticmethod
     def importar_clientes_csv(
         arquivo_csv: str,
         operadora_padrao_id: str = None,

@@ -50,6 +50,7 @@ class Processo(Base):
     # Relacionamentos
     cliente = relationship("Cliente", back_populates="processos")
     aprovado_por = relationship("Usuario", foreign_keys=[aprovado_por_usuario_id])
+    faturas = relationship("Fatura", back_populates="processo")
     
     def __repr__(self):
         return f"<Processo(id='{self.id}', cliente_id='{self.cliente_id}', status='{self.status_processo}')>"
