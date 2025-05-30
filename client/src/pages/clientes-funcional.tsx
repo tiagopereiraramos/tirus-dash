@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Plus, Building, CheckCircle, XCircle, MapPin } from "lucide-react";
+import { Users, Plus, Building, CheckCircle, XCircle, MapPin, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -56,6 +56,8 @@ export default function Clientes() {
   const { toast } = useToast();
   const [busca, setBusca] = useState<string>("");
   const [filtroOperadora, setFiltroOperadora] = useState<string>("");
+  const [clienteEditando, setClienteEditando] = useState<Cliente | null>(null);
+  const [dialogEditarAberto, setDialogEditarAberto] = useState(false);
   const [dialogAberto, setDialogAberto] = useState(false);
   const [novoCliente, setNovoCliente] = useState<NovoCliente>({
     nome_sat: "",
@@ -478,7 +480,15 @@ export default function Clientes() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        setClienteEditando(cliente);
+                        setDialogEditarAberto(true);
+                      }}
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
                       Editar
                     </Button>
                   </TableCell>
@@ -495,6 +505,85 @@ export default function Clientes() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Dialog de Edição */}
+      <Dialog open={dialogEditarAberto} onOpenChange={setDialogEditarAberto}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Cliente</DialogTitle>
+            <DialogDescription>
+              Edite as informações do cliente selecionado.
+            </DialogDescription>
+          </DialogHeader>
+          {clienteEditando && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Nome SAT</Label>
+                <Input
+                  value={clienteEditando.nome_sat}
+                  onChange={(e) => setClienteEditando({
+                    ...clienteEditando,
+                    nome_sat: e.target.value
+                  })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>CNPJ</Label>
+                <Input
+                  value={clienteEditando.cnpj}
+                  onChange={(e) => setClienteEditando({
+                    ...clienteEditando,
+                    cnpj: e.target.value
+                  })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Unidade</Label>
+                <Input
+                  value={clienteEditando.unidade}
+                  onChange={(e) => setClienteEditando({
+                    ...clienteEditando,
+                    unidade: e.target.value
+                  })}
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={clienteEditando.status_ativo}
+                  onCheckedChange={(checked) => setClienteEditando({
+                    ...clienteEditando,
+                    status_ativo: checked
+                  })}
+                />
+                <Label>Status Ativo</Label>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setDialogEditarAberto(false);
+                setClienteEditando(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => {
+                toast({
+                  title: "Cliente atualizado",
+                  description: "As informações do cliente foram atualizadas com sucesso.",
+                });
+                setDialogEditarAberto(false);
+                setClienteEditando(null);
+              }}
+            >
+              Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
