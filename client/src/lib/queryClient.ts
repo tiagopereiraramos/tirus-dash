@@ -28,6 +28,8 @@ export async function apiRequest(url: string, options: RequestInit = {}) {
     finalOptions.body = JSON.stringify(finalOptions.body);
   }
 
+  console.log('Making API request to:', url); // Debug
+
   const response = await fetch(url, finalOptions);
   
   if (!response.ok) {
