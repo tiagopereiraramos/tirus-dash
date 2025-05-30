@@ -38,10 +38,7 @@ export default function Aprovacoes() {
 
   const aprovarMutation = useMutation({
     mutationFn: ({ id, observacao }: { id: number; observacao?: string }) => 
-      apiRequest(`/api/aprovacoes/${id}/aprovar`, {
-        method: "POST",
-        body: JSON.stringify({ observacao }),
-      }),
+      apiRequest(`/api/aprovacoes/${id}/aprovar`, "POST", { observacao }),
     onSuccess: () => {
       toast({
         title: "Aprovação realizada",
@@ -60,10 +57,7 @@ export default function Aprovacoes() {
 
   const rejeitarMutation = useMutation({
     mutationFn: ({ id, motivo }: { id: number; motivo: string }) => 
-      apiRequest(`/api/aprovacoes/${id}/rejeitar`, {
-        method: "POST",
-        body: JSON.stringify({ motivo }),
-      }),
+      apiRequest(`/api/aprovacoes/${id}/rejeitar`, "POST", { motivo }),
     onSuccess: () => {
       toast({
         title: "Rejeição realizada",
