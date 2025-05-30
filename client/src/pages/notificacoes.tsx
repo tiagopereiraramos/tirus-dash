@@ -60,7 +60,8 @@ export default function Notificacoes() {
     }
   };
 
-  const notificacoesFiltradas = notificacoes?.filter((notif: any) => {
+  const notificacoesData = notificacoes?.data || [];
+  const notificacoesFiltradas = notificacoesData.filter((notif: any) => {
     const filtroLidaMatch = filtroLida === "todas" || 
       (filtroLida === "lidas" && notif.lida) ||
       (filtroLida === "nao-lidas" && !notif.lida);
@@ -70,7 +71,7 @@ export default function Notificacoes() {
     return filtroLidaMatch && filtroTipoMatch;
   }) || [];
 
-  const naoLidasCount = notificacoes?.filter((notif: any) => !notif.lida).length || 0;
+  const naoLidasCount = notificacoesData.filter((notif: any) => !notif.lida).length || 0;
 
   return (
     <div className="space-y-6">

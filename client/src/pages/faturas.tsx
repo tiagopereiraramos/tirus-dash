@@ -159,7 +159,7 @@ export default function Faturas() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {faturas?.data?.map((fatura: any) => (
+              {(faturas?.data || []).map((fatura: any) => (
                 <TableRow key={fatura.id} className="hover:bg-muted/50">
                   <TableCell>
                     <div>
