@@ -13,7 +13,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 
 from ..models.database import get_db_session
-from ..models.processo import Cliente, Operadora
+from ..models.cliente import Cliente
+from ..models.operadora import Operadora
 from .hash_service import generate_hash_cad
 
 logger = logging.getLogger(__name__)

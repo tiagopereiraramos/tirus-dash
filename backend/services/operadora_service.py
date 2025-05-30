@@ -12,7 +12,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 
 from ..models.database import get_db_session
-from ..models.processo import Operadora, Cliente
+from ..models.operadora import Operadora
+from ..models.cliente import Cliente
 
 logger = logging.getLogger(__name__)
 
