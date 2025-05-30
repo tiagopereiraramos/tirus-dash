@@ -1,9 +1,20 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, Building2, Edit, Trash2, Settings, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Operadora {
   id: number;
@@ -15,6 +26,15 @@ interface Operadora {
   possui_rpa: boolean;
   status_ativo: boolean;
 }
+
+const operadoraSchema = z.object({
+  nome: z.string().min(1, "Nome é obrigatório"),
+  codigo: z.string().min(2, "Código deve ter pelo menos 2 caracteres"),
+  tipo: z.string().min(1, "Tipo é obrigatório"),
+  url_login: z.string().url("URL deve ser válida"),
+  possui_rpa: z.boolean().default(false),
+  status_ativo: z.boolean().default(true),
+});
 
 export default function Operadoras() {
   const { data: operadorasData, isLoading } = useQuery<Operadora[]>({

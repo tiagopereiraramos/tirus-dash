@@ -44,6 +44,22 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
+class OperadoraCreate(BaseModel):
+    nome: str
+    codigo: str
+    tipo: str
+    url_login: str
+    possui_rpa: bool = False
+    status_ativo: bool = True
+
+class OperadoraUpdate(BaseModel):
+    nome: Optional[str] = None
+    codigo: Optional[str] = None
+    tipo: Optional[str] = None
+    url_login: Optional[str] = None
+    possui_rpa: Optional[bool] = None
+    status_ativo: Optional[bool] = None
+
 # ===== ENDPOINTS DO DASHBOARD =====
 @app.get("/api/dashboard/metrics")
 async def get_dashboard_metrics():
@@ -86,6 +102,68 @@ async def get_operadoras(
         return {
             "success": True,
             "data": operadoras
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/operadoras")
+async def criar_operadora(operadora: OperadoraCreate):
+    """Criar nova operadora"""
+    try:
+        nova_operadora = OperadoraService.criar_operadora(
+            nome=operadora.nome,
+            codigo=operadora.codigo,
+            tipo=operadora.tipo,
+            url_login=operadora.url_login,
+            possui_rpa=operadora.possui_rpa,
+            status_ativo=operadora.status_ativo
+        )
+        return {
+            "success": True,
+            "data": nova_operadora,
+            "message": "Operadora criada com sucesso"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/api/operadoras/{operadora_id}")
+async def atualizar_operadora(operadora_id: int, operadora: OperadoraUpdate):
+    """Atualizar operadora existente"""
+    try:
+        operadora_atualizada = OperadoraService.atualizar_operadora(
+            operadora_id=operadora_id,
+            dados=operadora.dict(exclude_unset=True)
+        )
+        return {
+            "success": True,
+            "data": operadora_atualizada,
+            "message": "Operadora atualizada com sucesso"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/operadoras/{operadora_id}")
+async def deletar_operadora(operadora_id: int):
+    """Deletar operadora"""
+    try:
+        resultado = OperadoraService.deletar_operadora(operadora_id)
+        return {
+            "success": True,
+            "data": resultado,
+            "message": "Operadora deletada com sucesso"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/operadoras/{operadora_id}/test")
+async def testar_operadora(operadora_id: int):
+    """Testar conexão RPA da operadora"""
+    try:
+        resultado = OperadoraService.testar_conexao_rpa(operadora_id)
+        return {
+            "success": True,
+            "data": resultado,
+            "message": "Teste de conexão realizado"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
