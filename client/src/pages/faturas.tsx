@@ -143,17 +143,17 @@ export default function Faturas() {
   const faturas = responseFaturas || [];
 
   // Filtrar faturas
-  const faturasFiltradas = faturas.filter((fatura: Fatura) => {
+  const faturasFiltradas = Array.isArray(faturas) ? faturas.filter((fatura: any) => {
     const matchBusca = !busca || 
       fatura.cliente?.nome_sat?.toLowerCase().includes(busca.toLowerCase()) ||
       fatura.cliente?.operadora?.nome?.toLowerCase().includes(busca.toLowerCase()) ||
-      fatura.mes_ano.includes(busca);
+      fatura.mes_ano?.includes(busca);
     
     const matchStatus = filtroStatus === "todos" || fatura.status_processo === filtroStatus;
     const matchMesAno = !filtroMesAno || fatura.mes_ano === filtroMesAno;
     
     return matchBusca && matchStatus && matchMesAno;
-  });
+  }) : [];
 
   const totalFaturas = faturasFiltradas.length;
   const valorTotal = faturasFiltradas.reduce((sum: number, f: Fatura) => sum + (f.valor_fatura || 0), 0);

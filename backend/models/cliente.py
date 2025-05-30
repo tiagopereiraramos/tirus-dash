@@ -2,9 +2,7 @@
 Modelo Cliente
 """
 
-import uuid
-from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey, Integer
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
@@ -16,12 +14,12 @@ class Cliente(Base):
     
     __tablename__ = "clientes"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(Integer, primary_key=True)
     hash_unico = Column(String(50), unique=True, nullable=False)
     razao_social = Column(String(255), nullable=False)
     nome_sat = Column(String(255), nullable=False)
     cnpj = Column(String(20), nullable=False)
-    operadora_id = Column(UUID(as_uuid=True), ForeignKey("operadoras.id"))
+    operadora_id = Column(Integer, ForeignKey("operadoras.id"))
     filtro = Column(String(255))
     servico = Column(String(255))
     dados_sat = Column(Text)
@@ -31,8 +29,7 @@ class Cliente(Base):
     senha_portal = Column(String(100))
     cpf = Column(String(20))
     status_ativo = Column(Boolean, default=True)
-    data_criacao = Column(DateTime, default=func.now())
-    data_atualizacao = Column(DateTime, default=func.now(), onupdate=func.now())
+    created_at = Column(DateTime, default=func.now())
     
     # Relacionamentos
     operadora = relationship("Operadora", back_populates="clientes")

@@ -2,9 +2,7 @@
 Modelo Operadora
 """
 
-import uuid
-from sqlalchemy import Column, String, Boolean, DateTime, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Boolean, DateTime, Text, Integer
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
@@ -16,15 +14,14 @@ class Operadora(Base):
     
     __tablename__ = "operadoras"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(Integer, primary_key=True)
     nome = Column(String(100), unique=True, nullable=False)
     codigo = Column(String(20), unique=True, nullable=False)
     possui_rpa = Column(Boolean, default=False)
     status_ativo = Column(Boolean, default=True)
     url_portal = Column(String(500))
     instrucoes_acesso = Column(Text)
-    data_criacao = Column(DateTime, default=func.now())
-    data_atualizacao = Column(DateTime, default=func.now(), onupdate=func.now())
+    created_at = Column(DateTime, default=func.now())
     
     # Relacionamentos
     clientes = relationship("Cliente", back_populates="operadora")

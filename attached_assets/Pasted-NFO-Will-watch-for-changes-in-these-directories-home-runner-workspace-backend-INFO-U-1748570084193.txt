@@ -1,0 +1,38 @@
+NFO:     Will watch for changes in these directories: ['/home/runner/workspace/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started server process [26266]4] using StatReload
+INFO:     Waiting for application startup.
+🚀 Iniciando Sistema RPA BGTELECOM...
+📋 Inicializando operadoras padrão...
+Erro na inicialização de operadoras: (psycopg2.errors.UndefinedColumn) column operadoras.data_criacao does not exist
+LINE 1: ...nstrucoes_acesso AS operadoras_instrucoes_acesso, operadoras...
+                                                             ^
+
+[SQL: SELECT operadoras.id AS operadoras_id, operadoras.nome AS operadoras_nome, operadoras.codigo AS operadoras_codigo, operadoras.possui_rpa AS operadoras_possui_rpa, operadoras.status_ativo AS operadoras_status_ativo, operadoras.url_portal AS operadoras_url_portal, operadoras.instrucoes_acesso AS operadoras_instrucoes_acesso, operadoras.data_criacao AS operadoras_data_criacao, operadoras.data_atualizacao AS operadoras_data_atualizacao 
+FROM operadoras 
+WHERE operadoras.nome = %(nome_1)s OR operadoras.codigo = %(codigo_1)s 
+ LIMIT %(param_1)s]
+[parameters: {'nome_1': 'EMBRATEL', 'codigo_1': 'EMB', 'param_1': 1}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+⚠️ Erro ao inicializar operadoras: (psycopg2.errors.UndefinedColumn) column operadoras.data_criacao does not exist
+LINE 1: ...nstrucoes_acesso AS operadoras_instrucoes_acesso, operadoras...
+                                                             ^
+
+[SQL: SELECT operadoras.id AS operadoras_id, operadoras.nome AS operadoras_nome, operadoras.codigo AS operadoras_codigo, operadoras.possui_rpa AS operadoras_possui_rpa, operadoras.status_ativo AS operadoras_status_ativo, operadoras.url_portal AS operadoras_url_portal, operadoras.instrucoes_acesso AS operadoras_instrucoes_acesso, operadoras.data_criacao AS operadoras_data_criacao, operadoras.data_atualizacao AS operadoras_data_atualizacao 
+FROM operadoras 
+WHERE operadoras.nome = %(nome_1)s OR operadoras.codigo = %(codigo_1)s 
+ LIMIT %(param_1)s]
+[parameters: {'nome_1': 'EMBRATEL', 'codigo_1': 'EMB', 'param_1': 1}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+👥 Inicializando clientes BGTELECOM...
+Erro ao inicializar clientes BGTELECOM: (psycopg2.errors.UndefinedColumn) column clientes.data_criacao does not exist
+LINE 2: ..., clientes.status_ativo AS clientes_status_ativo, clientes.d...
+                                                             ^
+
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT clientes.id AS clientes_id, clientes.hash_unico AS clientes_hash_unico, clientes.razao_social AS clientes_razao_social, clientes.nome_sat AS clientes_nome_sat, clientes.cnpj AS clientes_cnpj, clientes.operadora_id AS clientes_operadora_id, clientes.filtro AS clientes_filtro, clientes.servico AS clientes_servico, clientes.dados_sat AS clientes_dados_sat, clientes.unidade AS clientes_unidade, clientes.site_emissao AS clientes_site_emissao, clientes.login_portal AS clientes_login_portal, clientes.senha_portal AS clientes_senha_portal, clientes.cpf AS clientes_cpf, clientes.status_ativo AS clientes_status_ativo, clientes.data_criacao AS clientes_data_criacao, clientes.data_atualizacao AS clientes_data_atualizacao 
+FROM clientes) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+✅ Clientes inicializados: 0
+🎯 Sistema RPA BGTELECOM iniciado com sucesso!
+INFO:     Application startup complete.
