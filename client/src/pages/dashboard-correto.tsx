@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Dashboard() {
   const { data: metrics, isLoading } = useQuery({
-    queryKey: ["/dashboard/metrics"],
+    queryKey: ["/dashboard"],
     retry: false,
   });
 
