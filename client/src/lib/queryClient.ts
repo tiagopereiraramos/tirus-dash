@@ -12,9 +12,9 @@ export async function apiRequest(
   method: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Conectar diretamente ao FastAPI backend na porta 8000
-  const fastApiBaseUrl = 'http://localhost:8000';
-  const fullUrl = `${fastApiBaseUrl}${url}`;
+  // Conectar ao backend Express na porta 5000
+  const baseUrl = window.location.origin;
+  const fullUrl = `${baseUrl}${url}`;
   
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -43,9 +43,9 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // Conectar diretamente ao FastAPI backend na porta 8000
-    const fastApiBaseUrl = 'http://localhost:8000';
-    const url = `${fastApiBaseUrl}${queryKey[0] as string}`;
+    // Conectar ao backend Express na porta 5000
+    const baseUrl = window.location.origin;
+    const url = `${baseUrl}${queryKey[0] as string}`;
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
