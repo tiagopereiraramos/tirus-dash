@@ -40,43 +40,43 @@ export default function Dashboard() {
       title: "Total de Operadoras",
       value: metrics?.operadoras || 0,
       icon: Building2,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50"
+      gradient: "from-blue-500 to-blue-600",
+      textColor: "text-white"
     },
     {
       title: "Total de Clientes", 
       value: metrics?.clientes || 0,
       icon: Users,
-      color: "text-green-600",
-      bgColor: "bg-green-50"
+      gradient: "from-green-500 to-green-600",
+      textColor: "text-white"
     },
     {
       title: "Processos Ativos",
       value: metrics?.processos || 0,
       icon: Activity,
-      color: "text-orange-600", 
-      bgColor: "bg-orange-50"
+      gradient: "from-orange-500 to-orange-600",
+      textColor: "text-white"
     },
     {
       title: "Execuções Hoje",
       value: metrics?.execucoes_hoje || 0,
       icon: Clock,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50"
+      gradient: "from-purple-500 to-purple-600",
+      textColor: "text-white"
     },
     {
       title: "Taxa de Sucesso",
       value: `${metrics?.taxa_sucesso || 0}%`,
       icon: TrendingUp,
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50"
+      gradient: "from-emerald-500 to-emerald-600",
+      textColor: "text-white"
     },
     {
       title: "Valor Total (Mês)",
-      value: `R$ ${metrics?.valor_total_mes?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}`,
+      value: `R$ ${(metrics?.valor_total_mes || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: DollarSign,
-      color: "text-indigo-600",
-      bgColor: "bg-indigo-50"
+      gradient: "from-indigo-500 to-indigo-600",
+      textColor: "text-white"
     }
   ];
 
@@ -89,15 +89,15 @@ export default function Dashboard() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {cards.map((card, index) => (
-          <Card key={index} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+          <Card key={index} className={`border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br ${card.gradient}`}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{card.title}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{card.value}</p>
+                  <p className={`text-sm font-medium ${card.textColor} opacity-90`}>{card.title}</p>
+                  <p className={`text-3xl font-bold ${card.textColor} mt-2`}>{card.value}</p>
                 </div>
-                <div className={`p-3 rounded-full ${card.bgColor}`}>
-                  <card.icon className={`h-6 w-6 ${card.color}`} />
+                <div className="p-3 rounded-full bg-white bg-opacity-20">
+                  <card.icon className={`h-6 w-6 ${card.textColor}`} />
                 </div>
               </div>
             </CardContent>
