@@ -51,6 +51,37 @@ class Processo(Base):
     cliente = relationship("Cliente", back_populates="processos")
     aprovado_por = relationship("Usuario", foreign_keys=[aprovado_por_usuario_id])
     faturas = relationship("Fatura", back_populates="processo")
+    execucoes = relationship("Execucao", back_populates="processo")
     
     def __repr__(self):
         return f"<Processo(id='{self.id}', cliente_id='{self.cliente_id}', status='{self.status_processo}')>"
+
+class Execucao(Base):
+    """
+    Modelo de Execução - representa cada tentativa de execução de um processo
+    """
+    __tablename__ = "execucoes"
+    
+    # Campos principais
+    id = Column(String, primary_key=True)
+    processo_id = Column(String, ForeignKey("processos.id"), nullable=False)
+    session_id = Column(String, nullable=False)
+    
+    # Status e controle
+    status_execucao = Column(String, nullable=False, default="pendente")
+    operadora_codigo = Column(String, nullable=False)
+    
+    # Timestamps
+    data_inicio = Column(DateTime, default=datetime.now)
+    data_fim = Column(DateTime)
+    data_criacao = Column(DateTime, default=datetime.now)
+    
+    # Logs e detalhes
+    logs_detalhes = Column(Text)
+    mensagem_erro = Column(Text)
+    
+    # Relacionamentos
+    processo = relationship("Processo", back_populates="execucoes")
+    
+    def __repr__(self):
+        return f"<Execucao(id='{self.id}', processo_id='{self.processo_id}', status='{self.status_execucao}')>"
