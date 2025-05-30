@@ -34,9 +34,11 @@ export default function Dashboard() {
     queryKey: ["/api/dashboard/metrics"]
   });
 
-  const { data: operadoras, isLoading: loadingOperadoras } = useQuery<Operadora[]>({
+  const { data: operadorasResponse, isLoading: loadingOperadoras } = useQuery<{operadoras: Operadora[]}>({
     queryKey: ["/api/operadoras"]
   });
+  
+  const operadoras = operadorasResponse?.operadoras || [];
 
   const { data: execucoes, isLoading: loadingExecucoes } = useQuery<Execucao[]>({
     queryKey: ["/api/execucoes"]
