@@ -8,7 +8,7 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard-correto";
 import Execucoes from "@/pages/execucoes-working";
 import Aprovacoes from "@/pages/aprovacoes-correto";
-import Operadoras from "@/pages/operadoras-working";
+import Operadoras from "@/pages/operadoras-funcional";
 import Clientes from "@/pages/clientes-working";
 import AdicionarCliente from "@/pages/adicionar-cliente";
 import UploadAvulso from "@/pages/upload-avulso";
