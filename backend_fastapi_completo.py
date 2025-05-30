@@ -7,7 +7,8 @@ Dados reais da BGTELECOM
 
 import uvicorn
 import os
-import psycopg2
+import sys
+import traceback
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, text
@@ -228,7 +229,49 @@ async def health_check():
         return {"status": "unhealthy", "error": str(e), "backend": "FastAPI"}
 
 if __name__ == "__main__":
-    print("🚀 Iniciando FastAPI Backend - Sistema RPA BGTELECOM")
-    print("📊 Conectando ao PostgreSQL...")
-    print("🌐 Servidor FastAPI rodando em: http://0.0.0.0:8000")
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+    try:
+        print("🚀 Iniciando Sistema RPA BGTELECOM - Backend FastAPI EXCLUSIVO")
+        print(f"📊 Conectando ao PostgreSQL: {DATABASE_URL[:50] if DATABASE_URL else 'URL não encontrada'}...")
+        
+        # Testar conexão primeiro
+        try:
+            with engine.connect() as conn:
+                result = conn.execute(text("SELECT 1"))
+                print("✅ Conexão PostgreSQL estabelecida com sucesso")
+        except Exception as db_error:
+            print(f"❌ Erro de conexão PostgreSQL: {db_error}")
+            traceback.print_exc()
+            sys.exit(1)
+        
+        # Criar tabelas se não existirem
+        try:
+            Base.metadata.create_all(bind=engine)
+            print("✅ Tabelas criadas/verificadas com sucesso")
+        except Exception as table_error:
+            print(f"❌ Erro ao criar tabelas: {table_error}")
+            traceback.print_exc()
+            sys.exit(1)
+        
+        # Inicializar dados
+        try:
+            with SessionLocal() as db:
+                inicializar_dados_bgtelecom(db)
+            print("✅ Dados da BGTELECOM inicializados")
+        except Exception as data_error:
+            print(f"⚠️  Aviso ao inicializar dados: {data_error}")
+            # Não parar por este erro, apenas avisar
+        
+        print("🌐 Servidor FastAPI EXCLUSIVO rodando em: http://localhost:8000")
+        print("📖 Documentação em: http://localhost:8000/docs")
+        print("🔄 Sistema 100% Python - EXPRESS REMOVIDO")
+        
+        uvicorn.run(app, host="0.0.0.0", port=8000, reload=False, log_level="info")
+        
+    except KeyboardInterrupt:
+        print("\n⏹️  Servidor interrompido pelo usuário")
+        sys.exit(0)
+    except Exception as e:
+        print(f"❌ Erro crítico ao iniciar o servidor FastAPI: {e}")
+        print("🔧 Detalhes completos do erro:")
+        traceback.print_exc()
+        sys.exit(1)
