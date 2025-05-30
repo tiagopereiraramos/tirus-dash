@@ -1,25 +1,25 @@
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "./components/ui/toaster";
+import { TooltipProvider } from "./components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
-import NotFound from "@/pages/not-found";
-import Dashboard from "@/pages/dashboard-final";
-import Execucoes from "@/pages/execucoes-working";
-import Aprovacoes from "@/pages/aprovacoes-funcional";
-import Operadoras from "@/pages/operadoras-funcional";
-import Clientes from "@/pages/clientes-funcional";
-import AdicionarCliente from "@/pages/adicionar-cliente";
-import UploadAvulso from "@/pages/upload-avulso";
-import Faturas from "@/pages/faturas";
-import Notificacoes from "@/pages/notificacoes";
-import Configuracoes from "@/pages/configuracoes";
-import Login from "@/pages/login";
-import Cadastro from "@/pages/cadastro";
-import Sidebar from "@/components/layout/sidebar";
-import Header from "@/components/layout/header";
-import { WebSocketProvider } from "@/lib/websocket";
+import NotFound from "./pages/not-found";
+import Dashboard from "./pages/dashboard-final";
+import Execucoes from "./pages/execucoes-working";
+import Aprovacoes from "./pages/aprovacoes-funcional";
+import Operadoras from "./pages/operadoras-funcional";
+import Clientes from "./pages/clientes-funcional";
+import AdicionarCliente from "./pages/adicionar-cliente";
+import UploadAvulso from "./pages/upload-avulso";
+import Faturas from "./pages/faturas";
+import Notificacoes from "./pages/notificacoes";
+import Configuracoes from "./pages/configuracoes";
+import Login from "./pages/login";
+import Cadastro from "./pages/cadastro";
+import Sidebar from "./components/layout/sidebar";
+import Header from "./components/layout/header";
+import { WebSocketProvider } from "./lib/websocket";
 
 function Router() {
   return (

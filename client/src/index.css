@@ -3,21 +3,26 @@
 @tailwind utilities;
 
 :root {
-  --background: 210 11% 98%; /* #F7F9FC */
-  --foreground: 222 84% 5%; /* #0F172A */
-  --muted: 210 40% 95%; /* #F1F5F9 */
-  --muted-foreground: 215 16% 47%; /* #64748B */
-  --popover: 0 0% 100%; /* #FFFFFF */
-  --popover-foreground: 222 84% 5%; /* #0F172A */
-  --card: 0 0% 100%; /* #FFFFFF */
-  --card-foreground: 222 84% 5%; /* #0F172A */
-  --border: 214 32% 91%; /* #E2E8F0 */
-  --input: 214 32% 91%; /* #E2E8F0 */
-  --primary: 221 83% 53%; /* #3366FF */
-  --primary-foreground: 210 40% 98%; /* #F8FAFC */
-  --secondary: 152 76% 42%; /* #00D68F */
-  --secondary-foreground: 210 40% 98%; /* #F8FAFC */
-  --accent: 32 95% 50%; /* #FFAA00 */
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 84% 4.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+  --radius: 0.5rem;
   --accent-foreground: 210 40% 98%; /* #F8FAFC */
   --destructive: 0 84% 60%; /* #EF4444 */
   --destructive-foreground: 0 0% 98%; /* #FAFAFA */
