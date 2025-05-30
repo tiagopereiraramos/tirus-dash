@@ -15,7 +15,7 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5000,
     strictPort: false,
-    allowedHosts: "all",
+    allowedHosts: ["localhost", ".replit.dev", ".janeway.replit.dev"],
     hmr: {
       port: 5000,
       host: "localhost",
