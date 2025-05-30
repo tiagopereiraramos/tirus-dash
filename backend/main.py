@@ -71,16 +71,7 @@ app.add_middleware(
 # Incluir rotas da API
 app.include_router(api_router)
 
-# Endpoint dashboard simples
-@app.get("/api/dashboard")
-async def get_dashboard():
-    """Dados do dashboard"""
-    return {
-        "operadoras": 6,
-        "clientes": 12,
-        "processos": 0,
-        "status": "online"
-    }
+# Dashboard endpoint removido - usando o do api_routes.py
 
 # Endpoint de status
 @app.get("/")

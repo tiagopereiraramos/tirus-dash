@@ -12,9 +12,11 @@ from sqlalchemy import and_, or_, func, desc
 
 from ..models.database import get_db_session
 from ..models.processo import (
-    Processo, Execucao, Cliente, Operadora,
+    Processo, Execucao,
     StatusProcesso, StatusExecucao, TipoExecucao
 )
+from ..models.cliente import Cliente
+from ..models.operadora import Operadora
 from ..models.usuario import Usuario
 
 logger = logging.getLogger(__name__)
