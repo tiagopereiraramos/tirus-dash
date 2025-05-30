@@ -24,7 +24,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 
 # SQLAlchemy e Pydantic
-from sqlalchemy import create_engine, Column, String, Boolean, DateTime, Decimal as SQLDecimal, Text, Integer, Date, ForeignKey
+from sqlalchemy import create_engine, Column, String, Boolean, DateTime, Numeric, Text, Integer, Date, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
@@ -130,7 +130,7 @@ class Processo(Base):
     url_fatura = Column(String(500))
     caminho_s3_fatura = Column(String(500))
     data_vencimento = Column(Date)
-    valor_fatura = Column(SQLDecimal(15,2))
+    valor_fatura = Column(Numeric(15,2))
     aprovado_por_usuario_id = Column(UUID(as_uuid=True), ForeignKey("usuarios.id"))
     data_aprovacao = Column(DateTime)
     enviado_para_sat = Column(Boolean, default=False)

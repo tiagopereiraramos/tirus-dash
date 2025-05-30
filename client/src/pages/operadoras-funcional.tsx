@@ -38,8 +38,8 @@ export default function Operadoras() {
     status_ativo: true
   });
 
-  // Buscar operadoras - endpoint retorna array direto
-  const { data: operadoras, isLoading, error } = useQuery<Operadora[]>({
+  // Buscar operadoras do FastAPI backend
+  const { data: responseOperadoras, isLoading, error } = useQuery({
     queryKey: ["/api/operadoras"],
     retry: 2
   });
