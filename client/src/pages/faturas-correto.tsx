@@ -65,7 +65,7 @@ export default function Faturas() {
     },
   });
 
-  const faturasData = faturasResponse?.data || [];
+  const faturasData = Array.isArray(faturasResponse) ? faturasResponse : (faturasResponse?.data || []);
 
   const faturasFiltradas = faturasData.filter((fatura) => {
     const matchOperadora = !filtroOperadora || fatura.operadora_nome === filtroOperadora;
