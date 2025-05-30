@@ -197,22 +197,22 @@ export default function Faturas() {
                 <TableRow key={fatura.id}>
                   <TableCell>
                     <div>
-                      <div className="font-medium">{fatura.nome_sat}</div>
+                      <div className="font-medium">{fatura.nome_sat || 'N/A'}</div>
                       {fatura.observacoes && (
                         <div className="text-sm text-muted-foreground">{fatura.observacoes}</div>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>{fatura.operadora_nome}</TableCell>
-                  <TableCell>{fatura.mes_ano}</TableCell>
+                  <TableCell>{fatura.operadora_nome || 'N/A'}</TableCell>
+                  <TableCell>{fatura.mes_ano || 'N/A'}</TableCell>
                   <TableCell>
-                    R$ {fatura.valor_fatura.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    R$ {(fatura.valor_fatura || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </TableCell>
                   <TableCell>
-                    <Badge className={getStatusColor(fatura.status_processo)}>
+                    <Badge className={getStatusColor(fatura.status_processo || 'PENDING')}>
                       <div className="flex items-center gap-1">
-                        {getStatusIcon(fatura.status_processo)}
-                        {fatura.status_processo.replace(/_/g, ' ')}
+                        {getStatusIcon(fatura.status_processo || 'PENDING')}
+                        {(fatura.status_processo || 'PENDING').replace(/_/g, ' ')}
                       </div>
                     </Badge>
                   </TableCell>
