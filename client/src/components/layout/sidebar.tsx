@@ -1,63 +1,56 @@
-import { Link, useLocation } from "wouter";
-import { cn } from "../../lib/utils";
-import { 
-  Home, 
-  Building2, 
-  Users, 
-  FileText, 
-  CheckCircle, 
-  Upload, 
-  UserPlus, 
-  Bell, 
+import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import {
+  LayoutDashboard,
+  Building2,
+  Users,
+  FileText,
+  CheckCircle,
+  Play,
+  Upload,
+  Bell,
   Settings,
-  Play
-} from "lucide-react";
+  LogOut
+} from 'lucide-react';
 
-const navItems = [
-  { href: "/", label: "Dashboard", icon: Home },
-  { href: "/operadoras", label: "Operadoras", icon: Building2 },
-  { href: "/clientes", label: "Clientes", icon: Users },
-  { href: "/faturas", label: "Faturas", icon: FileText },
-  { href: "/execucoes", label: "Execuções", icon: Play },
-  { href: "/aprovacoes", label: "Aprovações", icon: CheckCircle },
-  { href: "/adicionar-cliente", label: "Adicionar Cliente", icon: UserPlus },
-  { href: "/upload-avulso", label: "Upload Avulso", icon: Upload },
-  { href: "/notificacoes", label: "Notificações", icon: Bell },
-  { href: "/configuracoes", label: "Configurações", icon: Settings },
+const navigation = [
+  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Operadoras', href: '/operadoras', icon: Building2 },
+  { name: 'Clientes', href: '/clientes', icon: Users },
+  { name: 'Faturas', href: '/faturas', icon: FileText },
+  { name: 'Aprovações', href: '/aprovacoes', icon: CheckCircle },
+  { name: 'Execuções', href: '/execucoes', icon: Play },
+  { name: 'Upload Avulso', href: '/upload', icon: Upload },
+  { name: 'Notificações', href: '/notificacoes', icon: Bell },
+  { name: 'Configurações', href: '/configuracoes', icon: Settings },
 ];
 
 export default function Sidebar() {
-  const [location] = useLocation();
-
   return (
-    <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-screen p-4">
-      <div className="mb-8">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white">RPA BGTELECOM</h1>
-        <p className="text-sm text-gray-500">Sistema de Orquestração</p>
+    <div className="flex h-full w-64 flex-col bg-slate-900 border-r border-slate-800">
+      <div className="flex h-16 items-center justify-center px-4 border-b border-slate-800">
+        <h1 className="text-xl font-bold text-white">RPA BGTELECOM</h1>
       </div>
       
-      <nav className="space-y-2">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = location === item.href;
-          
-          return (
-            <Link key={item.href} href={item.href}>
-              <div
-                className={cn(
-                  "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors",
-                  isActive
-                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                )}
-              >
-                <Icon className="h-5 w-5" />
-                <span className="text-sm font-medium">{item.label}</span>
-              </div>
-            </Link>
-          );
-        })}
+      <nav className="flex-1 space-y-2 px-4 py-6">
+        {navigation.map((item) => (
+          <Link
+            key={item.name}
+            to={item.href}
+            className="group flex items-center px-3 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all duration-200"
+          >
+            <item.icon className="mr-3 h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-blue-400" />
+            {item.name}
+          </Link>
+        ))}
       </nav>
+
+      <div className="flex-shrink-0 p-4 border-t border-slate-800">
+        <button className="group flex w-full items-center px-3 py-3 text-sm font-medium text-slate-300 rounded-lg hover:bg-slate-800 hover:text-white transition-all duration-200">
+          <LogOut className="mr-3 h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-red-400" />
+          Sair
+        </button>
+      </div>
     </div>
   );
 }

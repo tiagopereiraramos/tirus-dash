@@ -48,12 +48,16 @@ export default function Aprovacoes() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const { toast } = useToast();
 
+  console.log("Aprovacoes component rendered");
+
   // Query para buscar aprovações
   const { data: aprovacoes = [], isLoading, error } = useQuery({
     queryKey: ["/api/aprovacoes"],
     retry: 1,
     staleTime: 0,
   });
+
+  console.log("Query state:", { aprovacoes, isLoading, error });
 
   // Debug: log de erro se houver
   if (error) {
