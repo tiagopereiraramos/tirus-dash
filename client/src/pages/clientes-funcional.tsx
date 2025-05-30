@@ -86,6 +86,34 @@ export default function Clientes() {
     retry: 2
   });
 
+  // Mutação para atualizar cliente
+  const atualizarClienteMutation = useMutation({
+    mutationFn: async (cliente: Cliente) => {
+      return apiRequest(`/api/clientes/${cliente.id}`, "PATCH", {
+        nome_sat: cliente.nome_sat,
+        cnpj: cliente.cnpj,
+        unidade: cliente.unidade,
+        status_ativo: cliente.status_ativo
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Cliente atualizado",
+        description: "As informações do cliente foram atualizadas com sucesso.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/clientes"] });
+      setDialogEditarAberto(false);
+      setClienteEditando(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao atualizar cliente",
+        description: error?.message || "Ocorreu um erro ao atualizar o cliente.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Mutação para criar novo cliente
   const criarClienteMutation = useMutation({
     mutationFn: (dadosCliente: NovoCliente) => 
@@ -571,15 +599,13 @@ export default function Clientes() {
             </Button>
             <Button 
               onClick={() => {
-                toast({
-                  title: "Cliente atualizado",
-                  description: "As informações do cliente foram atualizadas com sucesso.",
-                });
-                setDialogEditarAberto(false);
-                setClienteEditando(null);
+                if (clienteEditando) {
+                  atualizarClienteMutation.mutate(clienteEditando);
+                }
               }}
+              disabled={atualizarClienteMutation.isPending}
             >
-              Salvar Alterações
+              {atualizarClienteMutation.isPending ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </DialogFooter>
         </DialogContent>
