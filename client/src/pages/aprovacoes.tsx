@@ -171,232 +171,271 @@ export default function Aprovacoes() {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
-      {/* Header com gradiente cyan */}
-      <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-lg shadow-lg p-6 text-white">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Aprovações</h1>
-            <p className="text-cyan-100 mt-2">Analise e aprove faturas pendentes no sistema RPA BGTELECOM</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-6 w-6" />
-            <span className="text-sm font-medium">
-              {aprovacoes.filter((a: Aprovacao) => a.status === "pendente").length} pendentes
-            </span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Header moderno */}
+      <div className="bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 mb-2">Aprovações de Faturas</h1>
+              <p className="text-slate-600 text-lg">Analise e aprove faturas pendentes no sistema</p>
+              <div className="flex items-center mt-4 gap-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                  <span className="text-sm font-medium text-slate-700">
+                    {aprovacoes.filter((a: Aprovacao) => a.status === "pendente").length} Pendentes
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                  <span className="text-sm font-medium text-slate-700">
+                    {aprovacoes.filter((a: Aprovacao) => a.status === "aprovada").length} Aprovadas
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                  <span className="text-sm font-medium text-slate-700">
+                    {aprovacoes.filter((a: Aprovacao) => a.status === "rejeitada").length} Rejeitadas
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-right">
+              <div className="text-2xl font-bold text-slate-900">{aprovacoes.length}</div>
+              <div className="text-sm text-slate-600">Total de Solicitações</div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Cards de estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-cyan-500 to-cyan-600">
-          <CardContent className="p-6 text-center">
-            <div className="text-3xl font-bold text-white">{aprovacoes.length}</div>
-            <div className="text-sm text-cyan-100 mt-1">Total de Solicitações</div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-500 to-yellow-600">
-          <CardContent className="p-6 text-center">
-            <div className="text-3xl font-bold text-white">
-              {aprovacoes.filter((a: Aprovacao) => a.status === "pendente").length}
-            </div>
-            <div className="text-sm text-yellow-100 mt-1">Aguardando Análise</div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-green-500 to-green-600">
-          <CardContent className="p-6 text-center">
-            <div className="text-3xl font-bold text-white">
-              {aprovacoes.filter((a: Aprovacao) => a.status === "aprovada").length}
-            </div>
-            <div className="text-sm text-green-100 mt-1">Aprovadas</div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-red-500 to-red-600">
-          <CardContent className="p-6 text-center">
-            <div className="text-3xl font-bold text-white">
-              {aprovacoes.filter((a: Aprovacao) => a.status === "rejeitada").length}
-            </div>
-            <div className="text-sm text-red-100 mt-1">Rejeitadas</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filtros */}
-      <Card className="border-0 shadow-lg bg-white">
-        <CardContent className="p-4">
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+        {/* Filtros limpos */}
+        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
           <div className="flex items-center gap-4">
-            <CheckCircle className="h-5 w-5 text-slate-600" />
-            <Label>Filtrar por status:</Label>
+            <span className="text-sm font-medium text-slate-700">Filtrar por:</span>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
+              <SelectTrigger className="w-48 border-slate-300">
+                <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="all">Todos os status</SelectItem>
                 <SelectItem value="pendente">Pendentes</SelectItem>
                 <SelectItem value="aprovada">Aprovadas</SelectItem>
                 <SelectItem value="rejeitada">Rejeitadas</SelectItem>
               </SelectContent>
             </Select>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Tabela de aprovações */}
-      <Card className="border-0 shadow-lg bg-white">
-        <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-t-lg">
-          <CardTitle className="flex items-center text-slate-800">
-            <CheckCircle className="h-5 w-5 mr-2 text-cyan-600" />
-            Solicitações de Aprovação ({aprovacoesFiltradas.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
+        {/* Lista de aprovações moderna */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-200">
+            <h3 className="text-lg font-semibold text-slate-900">
+              Solicitações de Aprovação ({aprovacoesFiltradas.length})
+            </h3>
+          </div>
+          
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : aprovacoesFiltradas.length > 0 ? (
+            <div className="divide-y divide-slate-200">
+              {aprovacoesFiltradas.map((aprovacao: Aprovacao) => (
+                <div key={aprovacao.id} className="p-6 hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-4 mb-3">
+                        <span className="text-sm font-medium text-slate-500">#{aprovacao.id}</span>
+                        {getStatusBadge(aprovacao.status)}
+                        <div className={`text-sm font-medium ${getUrgenciaColor(aprovacao.vencimento)}`}>
+                          Vence em {new Date(aprovacao.vencimento).toLocaleDateString('pt-BR')}
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <div className="text-sm text-slate-500">Cliente</div>
+                          <div className="font-semibold text-slate-900">{aprovacao.cliente_nome}</div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-slate-500">Operadora</div>
+                          <div className="font-medium text-slate-700">{aprovacao.operadora}</div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-slate-500">Valor</div>
+                          <div className="text-lg font-bold text-green-600">
+                            R$ {aprovacao.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {aprovacao.observacoes && (
+                        <div className="mt-3 p-3 bg-slate-50 rounded-lg">
+                          <div className="text-sm text-slate-500">Observações</div>
+                          <div className="text-sm text-slate-700">{aprovacao.observacoes}</div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="ml-6">
+                      <Button
+                        onClick={() => handleViewDetails(aprovacao)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Analisar
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Operadora</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Vencimento</TableHead>
-                  <TableHead>Submissão</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {aprovacoesFiltradas.length > 0 ? aprovacoesFiltradas.map((aprovacao: Aprovacao) => (
-                  <TableRow key={aprovacao.id} className="hover:bg-slate-50/50 transition-colors">
-                    <TableCell className="font-medium text-slate-600">#{aprovacao.id}</TableCell>
-                    <TableCell className="font-semibold text-slate-900">{aprovacao.cliente_nome}</TableCell>
-                    <TableCell className="text-sm text-slate-600">{aprovacao.operadora}</TableCell>
-                    <TableCell className="font-semibold text-green-600">
-                      R$ {aprovacao.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </TableCell>
-                    <TableCell className={`text-sm ${getUrgenciaColor(aprovacao.vencimento)}`}>
-                      {new Date(aprovacao.vencimento).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell className="text-sm text-slate-600">
-                      {new Date(aprovacao.data_submissao).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(aprovacao.status)}</TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewDetails(aprovacao)}
-                          className="h-8 px-3 text-blue-600 border-blue-200 hover:bg-blue-50"
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          Analisar
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )) : (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-slate-500">
-                      Nenhuma solicitação encontrada
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <div className="text-center py-12">
+              <CheckCircle className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+              <div className="text-lg font-medium text-slate-900 mb-2">Nenhuma solicitação encontrada</div>
+              <div className="text-slate-500">Não há aprovações com os filtros selecionados</div>
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Dialog de detalhes da aprovação */}
+      {/* Modal de análise melhorado */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
-              Análise de Aprovação - #{aprovacaoSelecionada?.id}
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="border-b pb-4">
+            <DialogTitle className="text-2xl font-bold text-slate-900">
+              Análise de Aprovação
             </DialogTitle>
+            <p className="text-slate-600">Solicitation #{aprovacaoSelecionada?.id}</p>
           </DialogHeader>
           
           {aprovacaoSelecionada && (
-            <div className="space-y-6">
-              {/* Informações da fatura */}
-              <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg">
-                <div>
-                  <Label className="text-sm font-medium text-slate-600">Cliente</Label>
-                  <p className="text-lg font-semibold">{aprovacaoSelecionada.cliente_nome}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-slate-600">Operadora</Label>
-                  <p className="text-lg font-semibold">{aprovacaoSelecionada.operadora}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-slate-600">Valor</Label>
-                  <p className="text-lg font-semibold text-green-600">
-                    R$ {aprovacaoSelecionada.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-slate-600">Vencimento</Label>
-                  <p className={`text-lg font-semibold ${getUrgenciaColor(aprovacaoSelecionada.vencimento)}`}>
-                    {new Date(aprovacaoSelecionada.vencimento).toLocaleDateString('pt-BR')}
-                  </p>
+            <div className="space-y-6 pt-4">
+              {/* Card com informações principais */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-sm font-medium text-slate-600 mb-1">Cliente</div>
+                      <div className="text-xl font-bold text-slate-900">{aprovacaoSelecionada.cliente_nome}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-slate-600 mb-1">Operadora</div>
+                      <div className="text-lg font-semibold text-slate-700">{aprovacaoSelecionada.operadora}</div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-sm font-medium text-slate-600 mb-1">Valor da Fatura</div>
+                      <div className="text-2xl font-bold text-green-600">
+                        R$ {aprovacaoSelecionada.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-slate-600 mb-1">Data de Vencimento</div>
+                      <div className={`text-lg font-semibold ${getUrgenciaColor(aprovacaoSelecionada.vencimento)}`}>
+                        {new Date(aprovacaoSelecionada.vencimento).toLocaleDateString('pt-BR')}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Observações */}
-              <div className="space-y-2">
-                <Label htmlFor="observacoes">Observações da Análise</Label>
-                <Textarea
-                  id="observacoes"
-                  value={observacoes}
-                  onChange={(e) => setObservacoes(e.target.value)}
-                  placeholder="Adicione observações sobre a análise desta fatura..."
-                  className="min-h-24"
-                  disabled={aprovacaoSelecionada.status !== "pendente"}
-                />
+              {/* Detalhes adicionais */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white border border-slate-200 rounded-lg p-4">
+                  <div className="text-sm font-medium text-slate-600 mb-2">Mês de Referência</div>
+                  <div className="text-lg font-semibold">{aprovacaoSelecionada.mes_referencia}</div>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-lg p-4">
+                  <div className="text-sm font-medium text-slate-600 mb-2">Status Atual</div>
+                  <div>{getStatusBadge(aprovacaoSelecionada.status)}</div>
+                </div>
               </div>
 
-              {/* Ações */}
-              {aprovacaoSelecionada.status === "pendente" ? (
-                <div className="flex justify-end space-x-3 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setDialogOpen(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={handleRejeitar}
-                    disabled={rejeitarMutation.isPending}
-                    className="bg-red-600 hover:bg-red-700"
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    {rejeitarMutation.isPending ? "Rejeitando..." : "Rejeitar"}
-                  </Button>
-                  <Button
-                    onClick={handleAprovar}
-                    disabled={aprovarMutation.isPending}
-                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                  >
-                    <Check className="h-4 w-4 mr-2" />
-                    {aprovarMutation.isPending ? "Aprovando..." : "Aprovar"}
-                  </Button>
-                </div>
-              ) : (
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <p className="text-sm text-slate-600">
-                    Esta fatura já foi {aprovacaoSelecionada.status} 
-                    {aprovacaoSelecionada.aprovador && ` por ${aprovacaoSelecionada.aprovador}`}
-                    {aprovacaoSelecionada.data_aprovacao && ` em ${new Date(aprovacaoSelecionada.data_aprovacao).toLocaleDateString('pt-BR')}`}
-                  </p>
+              {/* Observações existentes */}
+              {aprovacaoSelecionada.observacoes && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="text-sm font-medium text-yellow-800 mb-2">Observações Existentes</div>
+                  <div className="text-yellow-700">{aprovacaoSelecionada.observacoes}</div>
                 </div>
               )}
+
+              {/* Campo para novas observações */}
+              {aprovacaoSelecionada.status === "pendente" && (
+                <div className="space-y-3">
+                  <Label htmlFor="observacoes" className="text-base font-medium">
+                    Observações da Análise
+                  </Label>
+                  <Textarea
+                    id="observacoes"
+                    value={observacoes}
+                    onChange={(e) => setObservacoes(e.target.value)}
+                    placeholder="Adicione suas observações sobre esta aprovação..."
+                    className="min-h-32 resize-none border-slate-300"
+                  />
+                </div>
+              )}
+
+              {/* Ações */}
+              <div className="border-t pt-6">
+                {aprovacaoSelecionada.status === "pendente" ? (
+                  <div className="flex justify-between">
+                    <Button
+                      variant="outline"
+                      onClick={() => setDialogOpen(false)}
+                      className="px-6"
+                    >
+                      Cancelar
+                    </Button>
+                    <div className="flex gap-3">
+                      <Button
+                        variant="destructive"
+                        onClick={handleRejeitar}
+                        disabled={rejeitarMutation.isPending}
+                        className="px-6"
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        {rejeitarMutation.isPending ? "Rejeitando..." : "Rejeitar"}
+                      </Button>
+                      <Button
+                        onClick={handleAprovar}
+                        disabled={aprovarMutation.isPending}
+                        className="bg-green-600 hover:bg-green-700 px-8"
+                      >
+                        <Check className="h-4 w-4 mr-2" />
+                        {aprovarMutation.isPending ? "Aprovando..." : "Aprovar Fatura"}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      {aprovacaoSelecionada.status === "aprovada" ? (
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-red-600" />
+                      )}
+                      <span className="font-medium">
+                        Esta fatura já foi {aprovacaoSelecionada.status}
+                      </span>
+                    </div>
+                    {aprovacaoSelecionada.aprovador && (
+                      <p className="text-sm text-slate-600">
+                        Por: {aprovacaoSelecionada.aprovador}
+                      </p>
+                    )}
+                    {aprovacaoSelecionada.data_aprovacao && (
+                      <p className="text-sm text-slate-600">
+                        Em: {new Date(aprovacaoSelecionada.data_aprovacao).toLocaleDateString('pt-BR')}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </DialogContent>
