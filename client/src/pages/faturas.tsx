@@ -78,10 +78,7 @@ export default function Faturas() {
   // Mutation para aprovar fatura
   const mutationAprovar = useMutation({
     mutationFn: async ({ faturaId, observacoes }: { faturaId: string; observacoes?: string }) => {
-      return await apiRequest(`/api/processos/${faturaId}/aprovar`, {
-        method: "PUT",
-        body: JSON.stringify({ observacoes }),
-      });
+      return await apiRequest(`/api/processos/${faturaId}/aprovar`, "PUT", { observacoes });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/processos"] });
@@ -104,10 +101,7 @@ export default function Faturas() {
   // Mutation para rejeitar fatura
   const mutationRejeitar = useMutation({
     mutationFn: async ({ faturaId, motivo }: { faturaId: string; motivo: string }) => {
-      return await apiRequest(`/api/processos/${faturaId}/rejeitar`, {
-        method: "PUT",
-        body: JSON.stringify({ motivo }),
-      });
+      return await apiRequest(`/api/processos/${faturaId}/rejeitar`, "PUT", { motivo });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/processos"] });

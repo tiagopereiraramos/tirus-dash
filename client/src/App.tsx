@@ -12,7 +12,7 @@ import Operadoras from "@/pages/operadoras-funcional";
 import Clientes from "@/pages/clientes-funcional";
 import AdicionarCliente from "@/pages/adicionar-cliente";
 import UploadAvulso from "@/pages/upload-avulso";
-import Faturas from "@/pages/faturas-correto";
+import Faturas from "@/pages/faturas";
 import Notificacoes from "@/pages/notificacoes";
 import Configuracoes from "@/pages/configuracoes";
 import Login from "@/pages/login";
