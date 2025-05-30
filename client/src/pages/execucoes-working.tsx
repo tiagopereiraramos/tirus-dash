@@ -31,14 +31,15 @@ export default function Execucoes() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {execucoes?.execucoes?.map((execucao: any) => (
+              {(execucoes || []).map((execucao: any) => (
                 <TableRow key={execucao.id}>
                   <TableCell>{execucao.id}</TableCell>
                   <TableCell>{execucao.operadora}</TableCell>
                   <TableCell>{execucao.status}</TableCell>
                   <TableCell>{execucao.data}</TableCell>
                 </TableRow>
-              )) || (
+              ))}
+              {(!execucoes || execucoes.length === 0) && (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center">Nenhuma execução encontrada</TableCell>
                 </TableRow>

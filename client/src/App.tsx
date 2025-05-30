@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
 import NotFound from "@/pages/not-found";
-import Dashboard from "@/pages/dashboard-correto";
+import Dashboard from "@/pages/dashboard-final";
 import Execucoes from "@/pages/execucoes-working";
 import Aprovacoes from "@/pages/aprovacoes-funcional";
 import Operadoras from "@/pages/operadoras-funcional";

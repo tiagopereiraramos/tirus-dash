@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function Operadoras() {
   const { data: operadorasData, isLoading } = useQuery({
-    queryKey: ["/operadoras"],
+    queryKey: ["/api/operadoras"],
     retry: false,
   });
 
@@ -13,7 +13,7 @@ export default function Operadoras() {
     return <div className="p-6">Carregando operadoras...</div>;
   }
 
-  const operadoras = operadorasData?.operadoras || [];
+  const operadoras = operadorasData || [];
 
   return (
     <div className="p-6 space-y-6">
