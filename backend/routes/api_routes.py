@@ -59,37 +59,7 @@ class LoginRequest(BaseModel):
     email: str
     senha: str
 
-# ===== DASHBOARD ROUTES =====
-@router.get("/dashboard")
-async def get_dashboard():
-    """Dados principais do dashboard - usado pela página Dashboard"""
-    return {
-        "operadoras": 6,
-        "clientes": 12,
-        "processos": 0,
-        "status": "online"
-    }
-
-@router.get("/dashboard/metrics")
-async def get_dashboard_metrics():
-    """Métricas em tempo real - usado pela página Dashboard"""
-    return {
-        "operadoras": 6,
-        "clientes": 12,
-        "processos": 0,
-        "execucoes_ativas": 0
-    }
-
-@router.get("/dashboard/complete")
-async def get_dashboard_complete():
-    """Dados completos do dashboard - usado pela página Dashboard"""
-    return {
-        "operadoras": 6,
-        "clientes": 12,
-        "processos": 0,
-        "status": "online",
-        "sistema": "RPA BGTELECOM"
-    }
+# Dashboard routes removidos - usando endpoint independente no main.py
 
 # ===== APROVAÇÕES ROUTES =====
 @router.get("/faturas")

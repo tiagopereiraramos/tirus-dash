@@ -6,8 +6,36 @@ Conforme especificação do manual da BGTELECOM
 from sqlalchemy import Column, String, DateTime, Boolean, Text, ForeignKey, Numeric
 from sqlalchemy.orm import relationship
 from datetime import datetime
+from enum import Enum
 
 from config.database import Base
+
+class StatusProcesso(Enum):
+    """Status possíveis para um processo"""
+    AGUARDANDO_DOWNLOAD = "aguardando_download"
+    EXECUTANDO = "executando"
+    FATURA_BAIXADA = "fatura_baixada"
+    PENDENTE_APROVACAO = "pendente_aprovacao"
+    AGUARDANDO_APROVACAO = "aguardando_aprovacao"
+    APROVADA = "aprovada"
+    REJEITADA = "rejeitada"
+    ENVIADA_SAT = "enviada_sat"
+    ERRO = "erro"
+    CONCLUIDA = "concluida"
+
+class StatusExecucao(Enum):
+    """Status possíveis para uma execução"""
+    PENDENTE = "pendente"
+    EXECUTANDO = "executando"
+    SUCESSO = "sucesso"
+    ERRO = "erro"
+    CANCELADA = "cancelada"
+
+class TipoExecucao(Enum):
+    """Tipos de execução"""
+    DOWNLOAD = "download"
+    UPLOAD_SAT = "upload_sat"
+    MANUAL = "manual"
 
 class Processo(Base):
     """
