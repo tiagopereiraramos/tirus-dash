@@ -98,7 +98,7 @@ async def criar_operadora(operadora: OperadoraCreate, db: Session = Depends(get_
 
 @router.put("/{operadora_id}", response_model=OperadoraResponse)
 async def atualizar_operadora(
-    operadora_id: str,
+    operadora_id: int,
     operadora_update: OperadoraUpdate,
     db: Session = Depends(get_db)
 ):
@@ -129,7 +129,7 @@ async def atualizar_operadora(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/{operadora_id}")
-async def deletar_operadora(operadora_id: str, db: Session = Depends(get_db)):
+async def deletar_operadora(operadora_id: int, db: Session = Depends(get_db)):
     """Remove uma operadora (soft delete)"""
     try:
         operadora = db.query(Operadora).filter(Operadora.id == operadora_id).first()

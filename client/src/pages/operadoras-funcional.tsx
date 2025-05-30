@@ -132,7 +132,7 @@ export default function Operadoras() {
 
   const testMutation = useMutation({
     mutationFn: (id: number) =>
-      apiRequest(`/api/operadoras/${id}/test`, { method: "POST" }),
+      apiRequest(`/api/operadoras/${id}/testar-rpa`, { method: "POST" }),
     onSuccess: (data) => {
       toast({
         title: "Teste Concluído",
@@ -158,12 +158,12 @@ export default function Operadoras() {
   const handleEdit = (operadora: Operadora) => {
     setEditingOperadora(operadora);
     form.reset({
-      nome: operadora.nome,
-      codigo: operadora.codigo,
-      tipo: operadora.tipo,
-      url_login: operadora.url_login,
-      possui_rpa: operadora.possui_rpa,
-      status_ativo: operadora.status_ativo,
+      nome: operadora.nome || "",
+      codigo: operadora.codigo || "",
+      tipo: operadora.tipo || "",
+      url_login: operadora.url_login || "",
+      possui_rpa: operadora.possui_rpa || false,
+      status_ativo: operadora.status_ativo !== undefined ? operadora.status_ativo : true,
     });
     setDialogOpen(true);
   };
