@@ -25,6 +25,7 @@ export interface IStorage {
   createOperadora(operadora: InsertOperadora): Promise<Operadora>;
   getClientes(params: { page?: number; limit?: number; search?: string }): Promise<any>;
   createCliente(cliente: InsertCliente): Promise<Cliente>;
+  updateCliente(id: number, updates: Partial<Cliente>): Promise<Cliente>;
   getContratos(params: { clienteId?: number; operadoraId?: number }): Promise<Contrato[]>;
   createContrato(contrato: InsertContrato): Promise<Contrato>;
   getNotificacoes(userId?: number): Promise<Notificacao[]>;
@@ -266,6 +267,11 @@ export class DatabaseStorage implements IStorage {
   async createCliente(cliente: InsertCliente): Promise<Cliente> {
     const [newCliente] = await db.insert(clientes).values(cliente).returning();
     return newCliente;
+  }
+
+  async updateCliente(id: number, updates: Partial<Cliente>): Promise<Cliente> {
+    const [updatedCliente] = await db.update(clientes).set(updates).where(eq(clientes.id, id)).returning();
+    return updatedCliente;
   }
 
   async getContratos(params: { clienteId?: number; operadoraId?: number }): Promise<Contrato[]> {
