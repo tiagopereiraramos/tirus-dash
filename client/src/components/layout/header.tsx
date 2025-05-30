@@ -1,91 +1,14 @@
-import { Bell, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 export default function Header() {
-  // Simplificar temporariamente para evitar erros de tipagem
-  const notificacoesNaoLidas = 0;
-
   return (
-    <div className="fixed top-0 left-64 right-0 h-16 bg-card border-b border-border z-40 flex items-center justify-between px-6">
-      {/* Left side - Title */}
-      <div className="flex items-center space-x-4">
-        <div>
-          <h2 className="text-xl font-semibold text-foreground">Dashboard Geral</h2>
-          <p className="text-sm text-muted-foreground">
-            Visão geral do sistema RPA BGTelecom
-          </p>
+    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+          Sistema RPA BGTELECOM
+        </h1>
+        <div className="flex items-center space-x-4">
+          <span className="text-sm text-gray-500">FastAPI Backend</span>
         </div>
       </div>
-
-      {/* Right side - Notifications and User */}
-      <div className="flex items-center space-x-4">
-        {/* Notifications */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="relative">
-              <Bell className="h-5 w-5" />
-              {notificacoesNaoLidas > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-1 -right-1 px-1 min-w-[18px] h-[18px] text-xs"
-                >
-                  {notificacoesNaoLidas}
-                </Badge>
-              )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-80" align="end">
-            <DropdownMenuLabel>Notificações</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <div className="text-sm text-muted-foreground">Nenhuma notificação</div>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* User Menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center space-x-2 h-auto p-2">
-              <div className="text-right">
-                <p className="text-sm font-medium text-foreground">Admin RPA</p>
-                <p className="text-xs text-muted-foreground">Administrador</p>
-              </div>
-              <Avatar className="h-8 w-8">
-                <AvatarImage src="" alt="Admin" />
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  <User className="h-4 w-4" />
-                </AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end">
-            <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              <span>Perfil</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Bell className="mr-2 h-4 w-4" />
-              <span>Notificações</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <span>Sair</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </div>
+    </header>
   );
 }

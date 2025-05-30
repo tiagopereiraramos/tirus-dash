@@ -1,127 +1,63 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { 
-  LayoutDashboard, 
-  Play, 
-  CheckCircle, 
+  Home, 
   Building2, 
   Users, 
-  FileText,
-  Bell,
+  FileText, 
+  CheckCircle, 
+  Upload, 
+  UserPlus, 
+  Bell, 
   Settings,
-  Bot
+  Play
 } from "lucide-react";
 
-interface SidebarItem {
-  title: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  badge?: number;
-}
-
-const sidebarItems: SidebarItem[] = [
-  {
-    title: "Dashboard",
-    href: "/",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Execuções RPA",
-    href: "/execucoes",
-    icon: Play,
-    badge: 3,
-  },
-  {
-    title: "Aprovações",
-    href: "/aprovacoes",
-    icon: CheckCircle,
-    badge: 12,
-  },
-  {
-    title: "Operadoras",
-    href: "/operadoras",
-    icon: Building2,
-  },
-  {
-    title: "Clientes",
-    href: "/clientes",
-    icon: Users,
-  },
-  {
-    title: "Faturas",
-    href: "/faturas",
-    icon: FileText,
-  },
-  {
-    title: "Notificações",
-    href: "/notificacoes",
-    icon: Bell,
-  },
-  {
-    title: "Configurações",
-    href: "/configuracoes",
-    icon: Settings,
-  },
+const navItems = [
+  { href: "/", label: "Dashboard", icon: Home },
+  { href: "/operadoras", label: "Operadoras", icon: Building2 },
+  { href: "/clientes", label: "Clientes", icon: Users },
+  { href: "/faturas", label: "Faturas", icon: FileText },
+  { href: "/execucoes", label: "Execuções", icon: Play },
+  { href: "/aprovacoes", label: "Aprovações", icon: CheckCircle },
+  { href: "/adicionar-cliente", label: "Adicionar Cliente", icon: UserPlus },
+  { href: "/upload-avulso", label: "Upload Avulso", icon: Upload },
+  { href: "/notificacoes", label: "Notificações", icon: Bell },
+  { href: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
 export default function Sidebar() {
   const [location] = useLocation();
 
   return (
-    <div className="fixed left-0 top-0 w-64 h-screen bg-sidebar border-r border-sidebar-border z-50">
-      {/* Logo */}
-      <div className="p-6 border-b border-sidebar-border">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-sidebar-primary rounded-lg flex items-center justify-center">
-            <Bot className="h-6 w-6 text-sidebar-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-sidebar-foreground">RPA Telecom</h1>
-            <p className="text-sm text-sidebar-foreground/70">Orquestrador</p>
-          </div>
-        </div>
+    <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-screen p-4">
+      <div className="mb-8">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">RPA BGTELECOM</h1>
+        <p className="text-sm text-gray-500">Sistema de Orquestração</p>
       </div>
-
-      {/* Navigation */}
-      <nav className="p-4">
-        <ul className="space-y-2">
-          {sidebarItems.map((item) => {
-            const isActive = location === item.href;
-            return (
-              <li key={item.href}>
-                <Link href={item.href}>
-                  <div
-                    className={cn(
-                      "flex items-center space-x-3 p-3 rounded-lg transition-colors cursor-pointer",
-                      isActive
-                        ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                    )}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    <span className="font-medium">{item.title}</span>
-                    {item.badge && (
-                      <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full min-w-[20px] h-5 flex items-center justify-center">
-                        {item.badge}
-                      </span>
-                    )}
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+      
+      <nav className="space-y-2">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location === item.href;
+          
+          return (
+            <Link key={item.href} href={item.href}>
+              <div
+                className={cn(
+                  "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors",
+                  isActive
+                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="text-sm font-medium">{item.label}</span>
+              </div>
+            </Link>
+          );
+        })}
       </nav>
-
-      {/* Footer */}
-      <div className="absolute bottom-4 left-4 right-4">
-        <div className="bg-sidebar-accent rounded-lg p-3">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse-soft"></div>
-            <span className="text-sm text-sidebar-accent-foreground">Sistema Online</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
